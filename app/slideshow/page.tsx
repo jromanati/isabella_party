@@ -153,34 +153,21 @@ function QRBadge() {
         backdropFilter: 'blur(20px)',
       }}
     >
-      {/* QR placeholder */}
+      {/* QR */}
       <div
-        className="w-12 h-12 rounded-lg flex-shrink-0 flex items-center justify-center"
+        className="w-32 h-32 rounded-xl flex-shrink-0 flex items-center justify-center"
         style={{
           background: '#ffffff',
-          padding: 3,
+          padding: 6,
         }}
       >
-        {/* SVG QR placeholder pattern */}
-        <svg viewBox="0 0 21 21" width="100%" height="100%">
-          <rect x="0" y="0" width="9" height="9" fill="#000" />
-          <rect x="1" y="1" width="7" height="7" fill="#fff" />
-          <rect x="2" y="2" width="5" height="5" fill="#000" />
-          <rect x="12" y="0" width="9" height="9" fill="#000" />
-          <rect x="13" y="1" width="7" height="7" fill="#fff" />
-          <rect x="14" y="2" width="5" height="5" fill="#000" />
-          <rect x="0" y="12" width="9" height="9" fill="#000" />
-          <rect x="1" y="13" width="7" height="7" fill="#fff" />
-          <rect x="2" y="14" width="5" height="5" fill="#000" />
-          <rect x="11" y="11" width="2" height="2" fill="#000" />
-          <rect x="14" y="11" width="2" height="2" fill="#000" />
-          <rect x="17" y="11" width="2" height="2" fill="#000" />
-          <rect x="11" y="14" width="2" height="2" fill="#000" />
-          <rect x="14" y="14" width="2" height="2" fill="#000" />
-          <rect x="17" y="14" width="2" height="2" fill="#000" />
-          <rect x="11" y="17" width="2" height="2" fill="#000" />
-          <rect x="14" y="17" width="2" height="2" fill="#000" />
-        </svg>
+        <Image
+          src="/isabella_party_qr.png"
+          alt="QR para subir fotos"
+          width={160}
+          height={160}
+          className="w-full h-full object-contain"
+        />
       </div>
       <div>
         <p

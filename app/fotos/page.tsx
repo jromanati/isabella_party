@@ -87,6 +87,23 @@ function UploadCard({
   }, [])
 
   useEffect(() => {
+    if (!cameraOpen) return
+    const stream = streamRef.current
+    const v = videoRef.current
+    if (!stream || !v) return
+
+    v.srcObject = stream
+    const id = requestAnimationFrame(() => {
+      v.play().catch((e) => {
+        const message = e instanceof Error ? e.message : String(e)
+        setCameraError(message)
+      })
+    })
+
+    return () => cancelAnimationFrame(id)
+  }, [cameraOpen])
+
+  useEffect(() => {
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop())
@@ -112,12 +129,6 @@ function UploadCard({
 
       streamRef.current = stream
       setCameraOpen(true)
-
-      const v = videoRef.current
-      if (v) {
-        v.srcObject = stream
-        await v.play().catch(() => null)
-      }
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
       setCameraError(message)
@@ -266,10 +277,14 @@ function UploadCard({
               style={{ background: 'rgba(5,3,8,0.92)', backdropFilter: 'blur(16px)' }}
             >
               <div
-                className="w-full max-w-lg rounded-2xl overflow-hidden"
-                style={{ border: '1px solid rgba(168,85,247,0.25)', background: 'rgba(10,5,20,0.85)' }}
+                className="w-full max-w-lg rounded-2xl overflow-hidden flex flex-col"
+                style={{
+                  border: '1px solid rgba(168,85,247,0.25)',
+                  background: 'rgba(10,5,20,0.85)',
+                  maxHeight: '90vh',
+                }}
               >
-                <div className="relative aspect-[3/4] bg-black">
+                <div className="relative flex-1 min-h-0 bg-black">
                   <video
                     ref={videoRef}
                     className="absolute inset-0 w-full h-full object-cover"
@@ -287,7 +302,7 @@ function UploadCard({
                   </button>
                 </div>
 
-                <div className="p-4 flex flex-col gap-3">
+                <div className="p-4 flex flex-col gap-3" style={{ overflowY: 'auto' }}>
                   {cameraError && (
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-body)' }}>
                       {cameraError}
