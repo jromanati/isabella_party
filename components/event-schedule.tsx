@@ -6,9 +6,9 @@ const SCHEDULE = [
   { time: '6:00 PM', label: 'Recepción de invitados', col: '#60a5fa', icon: '✦' },
   { time: '7:00 PM', label: 'Entrada de la quinceañera', col: '#f472b6', icon: '♛' },
   { time: '7:15 PM', label: 'Vals de honor', col: '#c084fc', icon: '♫' },
-  { time: '7:30 PM', label: 'Apertura de la pista', col: '#ec4899', icon: '⚡' },
+  { time: '7:45 PM', label: 'Apertura de la pista (Comienza la rumba)', col: '#ec4899', icon: '💃' },
   { time: '10:30 PM', label: 'Baile sorpresa', col: '#818cf8', icon: '★' },
-  { time: '11:45 AM', label: 'Pastel y cierre de noche', col: '#a855f7', icon: '◉' },
+  { time: '11:45 AM', label: 'Torta y cierre de noche', col: '#a855f7', icon: '◉' },
 ]
 
 export default function EventSchedule() {

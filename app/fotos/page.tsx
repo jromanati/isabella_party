@@ -57,12 +57,8 @@ function UploadCard({
   const [success, setSuccess] = useState<{ status: 'approved' | 'pending' | 'rejected' } | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [cameraOpen, setCameraOpen] = useState(false)
-  const [cameraError, setCameraError] = useState<string | null>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
 
   const handleFile = (f: File) => {
     setFile(f)
@@ -77,87 +73,6 @@ function UploadCard({
     const f = e.dataTransfer.files[0]
     if (f && f.type.startsWith('image/')) handleFile(f)
   }, [])
-
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop())
-      streamRef.current = null
-    }
-    setCameraOpen(false)
-  }, [])
-
-  useEffect(() => {
-    if (!cameraOpen) return
-    const stream = streamRef.current
-    const v = videoRef.current
-    if (!stream || !v) return
-
-    v.srcObject = stream
-    const id = requestAnimationFrame(() => {
-      v.play().catch((e) => {
-        const message = e instanceof Error ? e.message : String(e)
-        setCameraError(message)
-      })
-    })
-
-    return () => cancelAnimationFrame(id)
-  }, [cameraOpen])
-
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop())
-        streamRef.current = null
-      }
-    }
-  }, [])
-
-  const openCamera = useCallback(async () => {
-    setCameraError(null)
-
-    const mediaDevices = typeof navigator !== 'undefined' ? navigator.mediaDevices : undefined
-    if (!mediaDevices?.getUserMedia) {
-      cameraInputRef.current?.click()
-      return
-    }
-
-    try {
-      const stream = await mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-        audio: false,
-      })
-
-      streamRef.current = stream
-      setCameraOpen(true)
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e)
-      setCameraError(message)
-      cameraInputRef.current?.click()
-    }
-  }, [])
-
-  const captureFromCamera = useCallback(async () => {
-    const v = videoRef.current
-    if (!v) return
-
-    const width = v.videoWidth
-    const height = v.videoHeight
-    if (!width || !height) return
-
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.drawImage(v, 0, 0, width, height)
-
-    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92))
-    if (!blob) return
-
-    const captured = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' })
-    handleFile(captured)
-    stopCamera()
-  }, [stopCamera])
 
   const handleSubmit = async () => {
     if (!guestName.trim() || !file) return
@@ -266,86 +181,6 @@ function UploadCard({
       />
 
       <div className="p-4 sm:p-6 flex flex-col gap-5">
-        <AnimatePresence>
-          {cameraOpen && (
-            <motion.div
-              key="camera"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-              style={{ background: 'rgba(5,3,8,0.92)', backdropFilter: 'blur(16px)' }}
-            >
-              <div
-                className="w-full max-w-lg rounded-2xl overflow-hidden flex flex-col"
-                style={{
-                  border: '1px solid rgba(168,85,247,0.25)',
-                  background: 'rgba(10,5,20,0.85)',
-                  maxHeight: '90vh',
-                }}
-              >
-                <div className="relative flex-1 min-h-0 bg-black">
-                  <video
-                    ref={videoRef}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    playsInline
-                    muted
-                    autoPlay
-                  />
-                  <button
-                    type="button"
-                    onClick={stopCamera}
-                    className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.2)' }}
-                  >
-                    <X className="w-5 h-5 text-white/80" />
-                  </button>
-                </div>
-
-                <div className="p-4 flex flex-col gap-3" style={{ overflowY: 'auto' }}>
-                  {cameraError && (
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-body)' }}>
-                      {cameraError}
-                    </p>
-                  )}
-                  <div className="flex gap-2">
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={captureFromCamera}
-                      className="flex-1 py-3 rounded-xl text-sm font-semibold"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(236,72,153,0.85), rgba(168,85,247,0.85))',
-                        border: '1px solid rgba(236,72,153,0.4)',
-                        color: '#fff',
-                        fontFamily: 'var(--font-body)',
-                      }}
-                    >
-                      Capturar
-                    </motion.button>
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={stopCamera}
-                      className="px-4 py-3 rounded-xl text-sm font-semibold"
-                      style={{
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.12)',
-                        color: 'rgba(255,255,255,0.7)',
-                        fontFamily: 'var(--font-body)',
-                      }}
-                    >
-                      Cancelar
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {error && (
           <div
             className="rounded-xl px-4 py-3"
@@ -411,8 +246,11 @@ function UploadCard({
               type="file"
               accept="image/*"
               capture="environment"
-              className="sr-only"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) handleFile(f)
+              }}
             />
 
             {/* Gallery button */}
@@ -450,7 +288,7 @@ function UploadCard({
               type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.96 }}
-              onClick={openCamera}
+              onClick={() => cameraInputRef.current?.click()}
               disabled={uploading}
               className="flex flex-col items-center justify-center gap-3 rounded-xl py-6 px-3 transition-all duration-300"
               style={{
