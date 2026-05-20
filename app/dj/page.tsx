@@ -185,7 +185,6 @@ export default function DjPage() {
             >
               Actualizar
             </Button>
-            <p className="text-xs text-white/35">Auto-refresh: 5s · Regla: solo 1 sonando a la vez</p>
           </div>
           {error && <p className="text-sm" style={{ color: 'rgba(248,113,113,0.95)' }}>{error}</p>}
         </header>

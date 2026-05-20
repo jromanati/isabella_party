@@ -43,7 +43,6 @@ function Visualizer() {
 
 export default function NowPlayingPage() {
   const [nowPlaying, setNowPlaying] = useState<SongRequest | null>(null)
-  const [qrImageUrl, setQrImageUrl] = useState<string | null>(null)
 
   async function refresh() {
     const res = await fetch('/api/song-requests', { cache: 'no-store' })
@@ -57,13 +56,6 @@ export default function NowPlayingPage() {
 
   useEffect(() => {
     void refresh()
-    try {
-      const playlistUrl = `${window.location.origin}/playlist`
-      const qr = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(playlistUrl)}`
-      setQrImageUrl(qr)
-    } catch {
-      setQrImageUrl(null)
-    }
     const id = window.setInterval(() => {
       void refresh()
     }, 5_000)
@@ -72,6 +64,24 @@ export default function NowPlayingPage() {
 
   return (
     <main className="min-h-screen w-full overflow-hidden" style={{ background: '#050308' }}>
+      <div
+        className="fixed right-6 bottom-6 z-50 rounded-2xl border border-white/10 overflow-hidden"
+        style={{
+          width: 160,
+          height: 160,
+          background: 'rgba(0,0,0,0.35)',
+          boxShadow: '0 0 50px rgba(192,132,252,0.14)',
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/isabella_playlist_qr.png"
+          alt="QR para pedir canciones"
+          className="h-full w-full object-cover"
+          style={{ filter: 'drop-shadow(0 0 18px rgba(236,72,153,0.18))' }}
+        />
+      </div>
+
       <div
         className="pointer-events-none fixed inset-0"
         style={{
@@ -176,35 +186,11 @@ export default function NowPlayingPage() {
                 <p className="text-lg text-white/60" style={{ fontFamily: 'var(--font-body)' }}>
                   Pide tu canción escaneando el QR
                 </p>
-                <div
-                  className="mt-6 inline-flex items-center justify-center rounded-2xl border border-white/10"
-                  style={{
-                    width: 220,
-                    height: 220,
-                    background: 'rgba(0,0,0,0.35)',
-                    boxShadow: '0 0 50px rgba(192,132,252,0.14)',
-                  }}
-                >
-                  {qrImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={qrImageUrl}
-                      alt="QR para pedir canciones"
-                      className="h-full w-full object-cover"
-                      style={{ filter: 'drop-shadow(0 0 18px rgba(236,72,153,0.18))' }}
-                    />
-                  ) : (
-                    <p className="text-xs text-white/40" style={{ letterSpacing: '0.35em' }}>
-                      QR
-                    </p>
-                  )}
-                </div>
 
                 <Visualizer />
               </>
             )}
 
-            <p className="text-xs text-white/30 mt-4">Auto-refresh: 5s · URL sugerida: /playlist</p>
           </div>
         </div>
       </div>
