@@ -146,7 +146,7 @@ function QRBadge() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 1, delay: 1.5 }}
-      className="flex items-center gap-3 px-4 py-3 rounded-xl"
+      className="flex items-center gap-2 px-2.5 py-2 rounded-xl"
       style={{
         background: 'rgba(10,5,20,0.75)',
         border: '1px solid rgba(168,85,247,0.2)',
@@ -158,14 +158,14 @@ function QRBadge() {
         className="w-32 h-32 rounded-xl flex-shrink-0 flex items-center justify-center"
         style={{
           background: '#ffffff',
-          padding: 6,
+          padding: 7,
         }}
       >
         <Image
           src="/isabella_party_qr.png"
           alt="QR para subir fotos"
-          width={160}
-          height={160}
+          width={220}
+          height={220}
           className="w-full h-full object-contain"
         />
       </div>
@@ -190,9 +190,9 @@ function QRBadge() {
 // ── Ken Burns wrapper ─────────────────────────────────────────
 function KenBurnsImage({ photo, index }: { photo: GalleryPhoto; index: number }) {
   // Alternate zoom-in / zoom-out and pan direction per slide
-  const scale = index % 2 === 0 ? [1.08, 1.0] : [1.0, 1.08]
-  const x = index % 3 === 0 ? ['0%', '1.5%'] : index % 3 === 1 ? ['1%', '-1%'] : ['0%', '0%']
-  const y = index % 2 === 0 ? ['0%', '1%'] : ['1%', '0%']
+  const scale = index % 2 === 0 ? [1.0, 1.0] : [1.0, 1.0]
+  const x = index % 3 === 0 ? ['0%', '0%'] : index % 3 === 1 ? ['0%', '0%'] : ['0%', '0%']
+  const y = index % 2 === 0 ? ['0%', '0%'] : ['0%', '0%']
 
   return (
     <motion.div
@@ -202,11 +202,20 @@ function KenBurnsImage({ photo, index }: { photo: GalleryPhoto; index: number })
     >
       <Image
         src={photo.url}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover scale-110 blur-2xl opacity-40"
+        crossOrigin="anonymous"
+      />
+      <Image
+        src={photo.url}
         alt={`Recuerdo de ${photo.guestName}`}
         fill
         priority
         sizes="100vw"
-        className="object-cover"
+        className="object-contain"
         crossOrigin="anonymous"
       />
     </motion.div>
