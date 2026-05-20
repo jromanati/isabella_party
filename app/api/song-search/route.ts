@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { searchSpotifyTrack } from '@/lib/spotify'
+import { searchITunesSongs } from '@/lib/itunes'
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid query' }, { status: 400 })
     }
 
-    const results = await searchSpotifyTrack(query)
+    const results = await searchITunesSongs(query)
     return NextResponse.json({ results })
   } catch {
     return NextResponse.json({ results: [] })

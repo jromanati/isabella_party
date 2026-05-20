@@ -62,8 +62,7 @@ export type Database = {
           song_title: string | null
           artist_name: string | null
           album_image_url: string | null
-          spotify_track_id: string | null
-          spotify_url: string | null
+          preview_url: string | null
           status: 'pending' | 'playing' | 'played' | 'rejected'
           created_at: string
           played_at: string | null
@@ -75,8 +74,7 @@ export type Database = {
           song_title?: string | null
           artist_name?: string | null
           album_image_url?: string | null
-          spotify_track_id?: string | null
-          spotify_url?: string | null
+          preview_url?: string | null
           status?: 'pending' | 'playing' | 'played' | 'rejected'
           created_at?: string
           played_at?: string | null
@@ -88,8 +86,7 @@ export type Database = {
           song_title?: string | null
           artist_name?: string | null
           album_image_url?: string | null
-          spotify_track_id?: string | null
-          spotify_url?: string | null
+          preview_url?: string | null
           status?: 'pending' | 'playing' | 'played' | 'rejected'
           created_at?: string
           played_at?: string | null

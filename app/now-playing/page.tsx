@@ -23,7 +23,9 @@ function Visualizer() {
             height: 16 + ((i * 17) % 44),
             background: 'linear-gradient(180deg, rgba(236,72,153,0.95), rgba(168,85,247,0.95), rgba(96,165,250,0.95))',
             boxShadow: '0 0 18px rgba(192,132,252,0.25)',
-            animation: `npBar 900ms ease-in-out ${i * 45}ms infinite alternate`,
+            transformOrigin: 'bottom',
+            willChange: 'transform, filter, opacity',
+            animation: `npBar ${650 + (i % 6) * 140}ms ease-in-out ${i * 45}ms infinite alternate`,
             opacity: 0.9,
           }}
         />
@@ -31,8 +33,8 @@ function Visualizer() {
 
       <style jsx>{`
         @keyframes npBar {
-          from { transform: scaleY(0.35); filter: blur(0px); }
-          to { transform: scaleY(1.4); filter: blur(0.3px); }
+          from { transform: scaleY(0.15); opacity: 0.55; filter: blur(0px); }
+          to { transform: scaleY(1.75); opacity: 0.95; filter: blur(0.25px); }
         }
       `}</style>
     </div>
@@ -41,6 +43,7 @@ function Visualizer() {
 
 export default function NowPlayingPage() {
   const [nowPlaying, setNowPlaying] = useState<SongRequest | null>(null)
+  const [qrImageUrl, setQrImageUrl] = useState<string | null>(null)
 
   async function refresh() {
     const res = await fetch('/api/song-requests', { cache: 'no-store' })
@@ -54,6 +57,13 @@ export default function NowPlayingPage() {
 
   useEffect(() => {
     void refresh()
+    try {
+      const playlistUrl = `${window.location.origin}/playlist`
+      const qr = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(playlistUrl)}`
+      setQrImageUrl(qr)
+    } catch {
+      setQrImageUrl(null)
+    }
     const id = window.setInterval(() => {
       void refresh()
     }, 5_000)
@@ -126,7 +136,7 @@ export default function NowPlayingPage() {
                   className="font-sans font-black italic leading-tight"
                   style={{
                     fontSize: 'clamp(2.6rem, 5vw, 4.2rem)',
-                    background:
+                    backgroundImage:
                       'linear-gradient(135deg, #ffffff 0%, #f9a8d4 40%, #c084fc 70%, #818cf8 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
@@ -153,7 +163,7 @@ export default function NowPlayingPage() {
                   className="font-sans font-black italic leading-tight"
                   style={{
                     fontSize: 'clamp(2.6rem, 5vw, 4.2rem)',
-                    background:
+                    backgroundImage:
                       'linear-gradient(135deg, #ffffff 0%, #c084fc 60%, #60a5fa 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
@@ -175,9 +185,19 @@ export default function NowPlayingPage() {
                     boxShadow: '0 0 50px rgba(192,132,252,0.14)',
                   }}
                 >
-                  <p className="text-xs text-white/40" style={{ letterSpacing: '0.35em' }}>
-                    QR
-                  </p>
+                  {qrImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={qrImageUrl}
+                      alt="QR para pedir canciones"
+                      className="h-full w-full object-cover"
+                      style={{ filter: 'drop-shadow(0 0 18px rgba(236,72,153,0.18))' }}
+                    />
+                  ) : (
+                    <p className="text-xs text-white/40" style={{ letterSpacing: '0.35em' }}>
+                      QR
+                    </p>
+                  )}
                 </div>
 
                 <Visualizer />

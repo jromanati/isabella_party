@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 
-import type { SongRequest, SpotifyTrackResult } from '@/lib/playlist-types'
+import type { ITunesSongResult, SongRequest } from '@/lib/playlist-types'
 
 type SongRequestsApiResponse = {
   songRequests: SongRequest[]
@@ -16,7 +16,7 @@ type SongRequestsApiResponse = {
 }
 
 type SearchApiResponse = {
-  results: SpotifyTrackResult[]
+  results: ITunesSongResult[]
 }
 
 export default function PlaylistPage() {
@@ -24,7 +24,7 @@ export default function PlaylistPage() {
   const [rawSong, setRawSong] = useState('')
 
   const [searchLoading, setSearchLoading] = useState(false)
-  const [results, setResults] = useState<SpotifyTrackResult[]>([])
+  const [results, setResults] = useState<ITunesSongResult[]>([])
   const [searchError, setSearchError] = useState<string | null>(null)
 
   const [submitLoading, setSubmitLoading] = useState(false)
@@ -77,7 +77,7 @@ export default function PlaylistPage() {
       const data: unknown = await res.json().catch(() => null)
       if (!res.ok || !data || typeof data !== 'object') {
         setResults([])
-        setSearchError('No se pudo buscar en Spotify. Puedes enviar tu sugerencia manual.')
+        setSearchError('No se pudo buscar en este momento. Intenta de nuevo.')
         return
       }
 
@@ -85,14 +85,14 @@ export default function PlaylistPage() {
       setResults(Array.isArray(obj.results) ? obj.results : [])
 
       if (!Array.isArray(obj.results) || obj.results.length === 0) {
-        setSearchError('No encontramos resultados. Puedes enviar tu sugerencia manual.')
+        setSearchError('No encontramos resultados. Intenta con otro nombre o artista.')
       }
     } finally {
       setSearchLoading(false)
     }
   }
 
-  async function submitSong(selectedTrack: SpotifyTrackResult | null) {
+  async function submitSong(selectedTrack: ITunesSongResult | null) {
     setSearchError(null)
     setSubmitMessage(null)
 
@@ -106,6 +106,11 @@ export default function PlaylistPage() {
 
     if (!raw) {
       setSearchError('Escribe una canción o artista.')
+      return
+    }
+
+    if (!selectedTrack) {
+      setSearchError('Primero busca y selecciona una canción de los resultados.')
       return
     }
 
@@ -249,15 +254,6 @@ export default function PlaylistPage() {
               >
                 {searchLoading ? 'Buscando…' : 'Buscar canción'}
               </Button>
-
-              <Button
-                onClick={() => void submitSong(null)}
-                disabled={submitLoading}
-                variant="secondary"
-                className="bg-purple-500/15 hover:bg-purple-500/20 text-white border border-purple-400/25"
-              >
-                {submitLoading ? 'Enviando…' : 'Enviar manual'}
-              </Button>
             </div>
 
             {searchError && (
@@ -275,10 +271,10 @@ export default function PlaylistPage() {
             {results.length > 0 && (
               <div className="mt-3 flex flex-col gap-3">
                 <Separator className="bg-white/10" />
-                <p className="text-xs tracking-[0.3em] uppercase text-white/40">Resultados Spotify</p>
+                <p className="text-xs tracking-[0.3em] uppercase text-white/40">Resultados</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {results.map((r) => (
-                    <Card key={r.spotifyTrackId} className="border-white/10 bg-black/25">
+                  {results.map((r, idx) => (
+                    <Card key={`${r.title}-${r.artist}-${idx}`} className="border-white/10 bg-black/25">
                       <CardContent className="pt-6">
                         <div className="flex gap-4 items-center">
                           <div
@@ -305,16 +301,32 @@ export default function PlaylistPage() {
                           >
                             Sugerir esta
                           </Button>
-                          {r.spotifyUrl && (
+                          {r.previewUrl && (
                             <Button
-                              asChild
                               variant="outline"
                               className="border-white/10 bg-white/5 hover:bg-white/10"
+                              onClick={() => {
+                                const el = document.getElementById(`preview-audio-${idx}`)
+                                if (el instanceof HTMLAudioElement) {
+                                  if (el.paused) void el.play()
+                                  else el.pause()
+                                }
+                              }}
                             >
-                              <a href={r.spotifyUrl} target="_blank" rel="noreferrer">Ver</a>
+                              Escuchar preview
                             </Button>
                           )}
                         </div>
+
+                        {r.previewUrl && (
+                          <audio
+                            id={`preview-audio-${idx}`}
+                            className="mt-3 w-full"
+                            controls
+                            preload="none"
+                            src={r.previewUrl}
+                          />
+                        )}
                       </CardContent>
                     </Card>
                   ))}

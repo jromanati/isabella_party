@@ -1,9 +1,8 @@
-export type SpotifyTrackResult = {
-  spotifyTrackId: string
+export type ITunesSongResult = {
   title: string
   artist: string
   albumImageUrl: string | null
-  spotifyUrl: string | null
+  previewUrl: string | null
 }
 
 export type SongRequestStatus = 'pending' | 'playing' | 'played' | 'rejected'
@@ -15,8 +14,7 @@ export type SongRequest = {
   song_title: string | null
   artist_name: string | null
   album_image_url: string | null
-  spotify_track_id: string | null
-  spotify_url: string | null
+  preview_url: string | null
   status: SongRequestStatus
   created_at: string
   played_at: string | null

@@ -5,8 +5,7 @@ create table if not exists song_requests (
   song_title text,
   artist_name text,
   album_image_url text,
-  spotify_track_id text,
-  spotify_url text,
+  preview_url text,
   status text not null default 'pending',
   created_at timestamptz not null default now(),
   played_at timestamptz
@@ -21,4 +20,4 @@ alter table song_requests
 
 create index if not exists song_requests_status_idx on song_requests (status);
 create index if not exists song_requests_created_at_idx on song_requests (created_at);
-create index if not exists song_requests_spotify_track_id_idx on song_requests (spotify_track_id);
+create index if not exists song_requests_preview_url_idx on song_requests (preview_url);

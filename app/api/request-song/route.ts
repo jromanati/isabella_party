@@ -2,24 +2,23 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 import type { Database } from '@/lib/supabase/types'
-import type { SpotifyTrackResult } from '@/lib/spotify'
+import type { ITunesSongResult } from '@/lib/itunes'
 
 type RequestBody = {
   guestName: string
   rawSong: string
-  selectedTrack?: SpotifyTrackResult
+  selectedTrack?: ITunesSongResult
 }
 
-function isSpotifyTrackResult(value: unknown): value is SpotifyTrackResult {
+function isITunesSongResult(value: unknown): value is ITunesSongResult {
   if (!value || typeof value !== 'object') return false
   const obj = value as Record<string, unknown>
 
   return (
-    typeof obj.spotifyTrackId === 'string' &&
     typeof obj.title === 'string' &&
     typeof obj.artist === 'string' &&
     (obj.albumImageUrl == null || typeof obj.albumImageUrl === 'string') &&
-    (obj.spotifyUrl == null || typeof obj.spotifyUrl === 'string')
+    (obj.previewUrl == null || typeof obj.previewUrl === 'string')
   )
 }
 
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid rawSong' }, { status: 400 })
     }
 
-    const selectedTrack = isSpotifyTrackResult(obj.selectedTrack) ? obj.selectedTrack : null
+    const selectedTrack = isITunesSongResult(obj.selectedTrack) ? obj.selectedTrack : null
 
     const insertPayload: Database['public']['Tables']['song_requests']['Insert'] = selectedTrack
       ? {
@@ -60,8 +59,7 @@ export async function POST(req: Request) {
           song_title: selectedTrack.title,
           artist_name: selectedTrack.artist,
           album_image_url: selectedTrack.albumImageUrl,
-          spotify_track_id: selectedTrack.spotifyTrackId,
-          spotify_url: selectedTrack.spotifyUrl,
+          preview_url: selectedTrack.previewUrl,
           status: 'pending',
         }
       : {
@@ -70,8 +68,7 @@ export async function POST(req: Request) {
           song_title: rawSong,
           artist_name: null,
           album_image_url: null,
-          spotify_track_id: null,
-          spotify_url: null,
+          preview_url: null,
           status: 'pending',
         }
 
@@ -84,7 +81,19 @@ export async function POST(req: Request) {
       .single()
 
     if (error || !data) {
-      return NextResponse.json({ error: 'Failed to create song request' }, { status: 500 })
+      const errorObj = error as unknown as { code?: string; message?: string; details?: string; hint?: string } | null
+      return NextResponse.json(
+        {
+          error: 'Failed to create song request',
+          supabase: {
+            code: errorObj?.code ?? null,
+            message: errorObj?.message ?? null,
+            details: errorObj?.details ?? null,
+            hint: errorObj?.hint ?? null,
+          },
+        },
+        { status: 500 },
+      )
     }
 
     return NextResponse.json({ songRequest: data })

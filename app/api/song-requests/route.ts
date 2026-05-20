@@ -42,6 +42,10 @@ export async function GET() {
         return bTime.localeCompare(aTime)
       }
 
+      if (a.status === 'pending' && b.status === 'pending') {
+        return a.created_at.localeCompare(b.created_at)
+      }
+
       return a.created_at.localeCompare(b.created_at)
     })
 
