@@ -124,13 +124,56 @@ export default function ConocienzoAIsabellaPage() {
         }}
       />
 
+      <div
+        aria-hidden
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          opacity: 0.07,
+          mixBlendMode: 'overlay',
+          backgroundImage:
+            'repeating-linear-gradient(0deg, rgba(255,255,255,0.8) 0px, transparent 1px, transparent 3px)',
+        }}
+      />
+
+      {Array.from({ length: 18 }).map((_, i) => (
+        <motion.span
+          key={i}
+          aria-hidden
+          className="fixed rounded-full pointer-events-none"
+          style={{
+            left: `${(i * 19) % 100}%`,
+            top: `${(i * 13) % 100}%`,
+            width: i % 4 === 0 ? 3 : 2,
+            height: i % 4 === 0 ? 3 : 2,
+            background: i % 3 === 0 ? 'rgba(244,114,182,0.55)' : i % 2 === 0 ? 'rgba(192,132,252,0.5)' : 'rgba(59,130,246,0.35)',
+            boxShadow:
+              i % 3 === 0
+                ? '0 0 14px rgba(244,114,182,0.35)'
+                : i % 2 === 0
+                  ? '0 0 16px rgba(192,132,252,0.3)'
+                  : '0 0 14px rgba(59,130,246,0.22)',
+            opacity: 0.65,
+          }}
+          animate={{
+            y: [0, -12, 0],
+            opacity: [0.25, 0.7, 0.25],
+          }}
+          transition={{
+            duration: 7 + (i % 6),
+            repeat: Infinity,
+            delay: (i % 9) * 0.25,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
+
       {/* ── HEADER sticky ─────────────────────────────────────────── */}
       <header
-        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-5 sm:px-10 py-3"
+        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-4 sm:px-10 py-2"
         style={{
-          background: 'rgba(5,3,8,0.88)',
-          borderBottom: '1px solid rgba(168,85,247,0.22)',
-          backdropFilter: 'blur(22px)',
+          background: 'rgba(5,3,8,0.62)',
+          borderBottom: '1px solid rgba(168,85,247,0.16)',
+          backdropFilter: 'blur(26px)',
         }}
       >
         <a
@@ -143,8 +186,8 @@ export default function ConocienzoAIsabellaPage() {
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all"
-          style={{ background: 'linear-gradient(135deg, #9333ea, #ec4899)', color: '#fff', boxShadow: '0 0 22px rgba(147,51,234,0.45)' }}
+          className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-semibold transition-all"
+          style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.92), rgba(236,72,153,0.9))', color: '#fff', boxShadow: '0 0 18px rgba(147,51,234,0.35)' }}
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="hidden sm:inline">Volver a la invitación</span>
@@ -152,11 +195,457 @@ export default function ConocienzoAIsabellaPage() {
         </button>
       </header>
 
+      <div className="md:hidden">
+        <section className="relative pt-16 pb-6 px-4">
+          <div className="max-w-md mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <FadeIn delay={0.04}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr',
+                  alignItems: 'center',
+                }}
+              >
+                <motion.div
+                  aria-hidden
+                  style={{
+                    gridArea: '1 / 1',
+                    width: '100%',
+                    height: 320,
+                    justifySelf: 'center',
+                    background:
+                      'radial-gradient(circle at 55% 35%, rgba(236,72,153,0.22) 0%, rgba(124,58,237,0.18) 34%, transparent 70%)',
+                    filter: 'blur(18px)',
+                    opacity: 0.95,
+                    pointerEvents: 'none',
+                  }}
+                  animate={{ scale: [0.98, 1.03, 0.98], opacity: [0.72, 0.95, 0.72] }}
+                  transition={{ duration: 7.2, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <motion.img
+                  src="/blog_01.png"
+                  alt="Isabella, protagonista de la fiesta de XV"
+                  style={{
+                    gridArea: '1 / 1',
+                    width: '100%',
+                    maxWidth: 520,
+                    height: 'auto',
+                    display: 'block',
+                    margin: '0 auto',
+                    transform: 'rotate(-3.8deg)',
+                    filter: 'drop-shadow(0 18px 60px rgba(0,0,0,0.82))',
+                  }}
+                  animate={{ y: [0, -3, 0] }}
+                  transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+                />
+
+                <div
+                  style={{
+                    gridArea: '1 / 1',
+                    alignSelf: 'end',
+                    justifySelf: 'center',
+                    width: '92%',
+                    marginBottom: 14,
+                    textAlign: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 2,
+                      padding: '10px 14px 12px',
+                      borderRadius: 18,
+                      background: 'rgba(5,3,8,0.55)',
+                      border: '1px solid rgba(168,85,247,0.22)',
+                      boxShadow: '0 0 26px rgba(192,132,252,0.16)',
+                      backdropFilter: 'blur(18px)',
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-sans)',
+                        fontStyle: 'italic',
+                        fontWeight: 400,
+                        fontSize: '1.05rem',
+                        color: 'rgba(255,255,255,0.78)',
+                        margin: 0,
+                        letterSpacing: '0.01em',
+                      }}
+                    >
+                      Conociendo a
+                    </p>
+                    <h1
+                      style={{
+                        fontFamily: 'var(--font-sans)',
+                        fontStyle: 'italic',
+                        fontWeight: 900,
+                        fontSize: 'clamp(3.2rem, 13.5vw, 4.8rem)',
+                        background: 'linear-gradient(135deg, #f9a8d4 0%, #c084fc 50%, #a78bfa 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        lineHeight: 0.9,
+                        filter: 'drop-shadow(0 0 46px rgba(192,132,252,0.72))',
+                        margin: 0,
+                      }}
+                    >
+                      Isabella
+                    </h1>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontSize: '0.82rem', color: '#dbb6ff', letterSpacing: '0.02em' }}>
+                        Algunas cosas que me hacen feliz
+                      </span>
+                      <Sparkle size={14} color="#f472b6" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+
+            <FadeIn delay={0.1} style={{ display: 'flex', justifyContent: 'center' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <motion.img
+                src="/blog_02.png"
+                alt="Nota de cuaderno 'Sobre mí': Soy soñadora, creativa y súper curiosa"
+                style={{
+                  width: '100%',
+                  maxWidth: 360,
+                  height: 'auto',
+                  display: 'block',
+                  transform: 'rotate(4.2deg)',
+                  filter: 'drop-shadow(0 16px 46px rgba(0,0,0,0.78))',
+                }}
+                animate={{ y: [0, 2, 0] }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            </FadeIn>
+          </div>
+        </section>
+
+        <section className="relative px-4 pt-2 pb-6">
+          <div className="max-w-md mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <FadeIn delay={0.04} style={{ position: 'relative' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <motion.img
+                src="/blog_03.png"
+                alt="Isabella con uniforme de vóley sosteniendo un balón"
+                style={{
+                  width: '100%',
+                  maxWidth: 520,
+                  height: 'auto',
+                  display: 'block',
+                  margin: '0 auto',
+                  transform: 'rotate(2.1deg)',
+                  filter: 'drop-shadow(0 18px 62px rgba(0,0,0,0.82))',
+                }}
+                animate={{ y: [0, -2, 0] }}
+                transition={{ duration: 9.5, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            </FadeIn>
+
+            <FadeIn delay={0.08}>
+              <div>
+                <p style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 600, color: '#c084fc', fontSize: '1.05rem', marginBottom: 8 }}>
+                  Pasión #1
+                </p>
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    background: 'rgba(168,85,247,0.14)',
+                    border: '1px solid rgba(168,85,247,0.45)',
+                    borderRadius: 999,
+                    padding: '6px 14px',
+                    marginBottom: 10,
+                    color: '#ddb6ff',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  El Vóley <Heart color="#f472b6" size={12} />
+                </div>
+                <p style={{ fontSize: '0.92rem', color: 'rgba(255,255,255,0.68)', lineHeight: 1.95, margin: 0 }}>
+                  Amo este deporte. Me enseña disciplina, me reta cada día y me regala amistades increíbles. Ver partidos también es mi plan favorito.
+                </p>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        <section className="relative px-4 pt-1 pb-6">
+          <div className="max-w-md mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <FadeIn delay={0.04}>
+              <p style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 600, color: '#c084fc', fontSize: '1.02rem', lineHeight: 1.4, marginBottom: 10 }}>
+                Pequeñas cosas
+                <br />que me hacen feliz
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
+                {[
+                  'Escuchar música',
+                  'Dibujar y ser creativa',
+                  'Disney (soy fan total)',
+                  'Comics y series',
+                  'Atardeceres',
+                  'Detalles bonitos',
+                  'Viajar y conocer lugares nuevos',
+                ].map((item) => (
+                  <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.9rem', color: 'rgba(255,255,255,0.72)' }}>
+                    <Heart color="#f472b6" size={12} />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </FadeIn>
+
+            <FadeIn delay={0.1} style={{ display: 'flex', justifyContent: 'center' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <motion.img
+                src="/blog_04.png"
+                alt="Pequeñas cosas que me gustan: Arte, Disney y Peluches en fotos polaroid"
+                style={{
+                  width: '100%',
+                  maxWidth: 520,
+                  height: 'auto',
+                  display: 'block',
+                  transform: 'rotate(-2.1deg)',
+                  filter: 'drop-shadow(0 18px 58px rgba(0,0,0,0.82))',
+                }}
+                animate={{ y: [0, 2, 0] }}
+                transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            </FadeIn>
+          </div>
+        </section>
+
+        <section className="relative px-4 pt-1 pb-6">
+          <div className="max-w-md mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <FadeIn delay={0.04}>
+              <p style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 600, color: '#c084fc', fontSize: '1.05rem', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                Colores que me representan <Heart color="#f472b6" size={16} />
+              </p>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 12,
+                  overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  paddingBottom: 6,
+                  paddingRight: 10,
+                  alignItems: 'center',
+                  maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 88%, transparent 100%)',
+                }}
+              >
+                {COLORS.map((c, i) => (
+                  <motion.div
+                    key={c.name}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto' }}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.45, delay: 0.03 + i * 0.05 }}
+                  >
+                    <div
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: '50%',
+                        background: c.hex,
+                        boxShadow: `0 0 0 2px ${c.border ?? 'rgba(255,255,255,0.06)'}, 0 0 18px ${c.glow}`,
+                      }}
+                    />
+                    <p style={{ fontSize: '0.82rem', fontStyle: 'italic', fontFamily: 'var(--font-sans)', color: 'rgba(255,255,255,0.76)', margin: 0, whiteSpace: 'nowrap' }}>
+                      {c.name}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </FadeIn>
+
+            <FadeIn delay={0.08}>
+              <div
+                style={{
+                  position: 'relative',
+                  background: 'rgba(90,50,170,0.22)',
+                  border: '1px solid rgba(168,85,247,0.28)',
+                  borderRadius: 4,
+                  boxShadow: '0 8px 26px rgba(0,0,0,0.48)',
+                  padding: '18px 16px 16px',
+                  transform: 'rotate(-1deg)',
+                  color: 'rgba(255,255,255,0.76)',
+                  fontSize: '0.92rem',
+                  fontStyle: 'italic',
+                  lineHeight: 1.7,
+                }}
+              >
+                <Tape rotate="4deg" top="-12px" left="50%" tx="-50%" w={54} />
+                Me encantan las cosas con significado, los detalles pensados y todo lo que tenga mi estilo <Sparkle size={13} color="#f472b6" />
+              </div>
+            </FadeIn>
+
+            <FadeIn delay={0.12} style={{ display: 'flex', justifyContent: 'center' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <motion.img
+                src="/blog_05.png"
+                alt="Mi mood: Moda, Música y Anime en polaroids"
+                style={{
+                  width: '100%',
+                  maxWidth: 520,
+                  height: 'auto',
+                  display: 'block',
+                  transform: 'rotate(2deg)',
+                  filter: 'drop-shadow(0 18px 64px rgba(0,0,0,0.84))',
+                }}
+                animate={{ y: [0, -2, 0] }}
+                transition={{ duration: 10.5, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            </FadeIn>
+          </div>
+        </section>
+
+        <section className="relative px-4 pt-1 pb-7">
+          <div className="max-w-md mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <FadeIn delay={0.04}>
+              <p style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 600, color: '#c084fc', fontSize: '1.05rem', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                Mi estilo <Heart color="#f472b6" size={14} />
+              </p>
+              <p style={{ fontSize: '0.92rem', color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.7 }}>
+                Cómodo, relajado y siempre con un toque de personalidad.
+              </p>
+            </FadeIn>
+
+            <FadeIn delay={0.08}>
+              <div
+                style={{
+                  position: 'relative',
+                  background: 'linear-gradient(135deg, #12091f 0%, #0d0620 100%)',
+                  border: '1px solid rgba(168,85,247,0.34)',
+                  borderRadius: 4,
+                  boxShadow: '0 8px 28px rgba(0,0,0,0.62), 0 0 28px rgba(168,85,247,0.06)',
+                  padding: '16px 16px',
+                  transform: 'rotate(-0.8deg)',
+                }}
+              >
+                <Tape rotate="-3deg" top="-12px" left="50%" tx="-50%" w={52} />
+                <p style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 700, color: '#c084fc', fontSize: '0.98rem', margin: '0 0 12px', textAlign: 'center' }}>
+                  Me gusta
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {['Accesorios', 'Gorros', 'Zapatos lindos', 'Oversize', 'Colores neutros', 'Detalles minimalistas'].map((item) => (
+                    <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                      <Heart color="#f472b6" size={12} />
+                      <span style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.72)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </FadeIn>
+
+            <FadeIn delay={0.12}>
+              <div
+                style={{
+                  position: 'relative',
+                  background: 'linear-gradient(135deg, #c8a870, #b8915a 50%, #c4a26c)',
+                  borderRadius: 4,
+                  boxShadow: '0 8px 26px rgba(0,0,0,0.55)',
+                  padding: '18px 16px',
+                  transform: 'rotate(1.2deg)',
+                }}
+              >
+                <Tape rotate="3deg" top="-12px" left="26%" tx="-50%" w={54} />
+                <Tape rotate="-5deg" top="-12px" left="74%" tx="-50%" w={46} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.72rem', color: '#2d1605', margin: 0 }}>
+                    Referencias Útiles
+                  </p>
+                  <Heart color="#7c3aed" size={13} />
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[
+                    { icon: '👕', label: 'Ropa:', val: 'Por confirmar' },
+                    { icon: '👟', label: 'Calzado:', val: 'Por confirmar' },
+                    { icon: '🎨', label: 'Colores favoritos:', val: 'Morado, lila, negro' },
+                  ].map((row) => (
+                    <li key={row.label} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: '0.88rem' }}>
+                      <span style={{ fontSize: 15, lineHeight: 1.5 }}>{row.icon}</span>
+                      <div>
+                        <span style={{ color: '#5a3a10', fontWeight: 700 }}>{row.label}</span>{' '}
+                        <span style={{ color: '#2d1605' }}>{row.val}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        <footer className="relative px-4 pt-1 pb-20">
+          <div aria-hidden style={{ maxWidth: 360, margin: '0 auto 18px', height: 1, background: 'linear-gradient(to right, transparent, rgba(168,85,247,0.5), transparent)', boxShadow: '0 0 12px rgba(168,85,247,0.28)' }} />
+          <div className="max-w-md mx-auto">
+            <FadeIn delay={0.06}>
+              <div
+                style={{
+                  position: 'relative',
+                  background: 'linear-gradient(to bottom, #faf2e4, #f4ead0)',
+                  borderRadius: 3,
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.6)',
+                  padding: '22px 18px',
+                  textAlign: 'center',
+                }}
+              >
+                <Tape rotate="-4deg" top="-13px" left="24%" tx="-50%" w={58} />
+                <Tape rotate="5deg" top="-13px" left="76%" tx="-50%" w={50} />
+                <p style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontSize: '0.98rem', color: '#2d1a45', lineHeight: 1.85, margin: 0 }}>
+                  <span style={{ color: '#7c3aed', fontWeight: 700 }}>No se trata</span> del regalo perfecto, sino de un detalle hecho con cariño.
+                  <br />
+                  Lo más importante será compartir esta noche con las personas que quiero.
+                </p>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 18 }}>
+                <motion.button
+                  onClick={() => router.push('/')}
+                  whileHover={{ scale: 1.03, y: -1 }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '12px 22px',
+                    borderRadius: 16,
+                    background: '#7c3aed',
+                    boxShadow: '0 0 30px rgba(124,58,237,0.5)',
+                    color: '#fff',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <ArrowLeft style={{ width: 16, height: 16 }} />
+                  Volver a la invitación
+                </motion.button>
+              </div>
+            </FadeIn>
+          </div>
+        </footer>
+      </div>
+
+      <div className="hidden md:block">
+
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* ROW 1 — HERO                                               */}
       {/* foto grande + título neon + cuaderno "Sobre mí"            */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      <section className="relative pt-24 pb-4 px-4 sm:px-8">
+      <section className="relative pt-20 pb-3 px-4 sm:px-8">
         {/* Floating sparkles decorativos */}
         {[
           { s: '✦', x: '6%', y: '14%', size: 13, delay: 0 },
@@ -178,36 +667,74 @@ export default function ConocienzoAIsabellaPage() {
         ))}
 
         <div
-          className="max-w-6xl mx-auto"
+          className="max-w-6xl mx-auto scrapbook-hero"
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,1fr)',
-            gap: '0px 12px',
+            gap: '0px 8px',
             alignItems: 'flex-start',
           }}
         >
           {/* Col 1 — Foto Isabella (blog_01 ya tiene tape y paper tear) */}
-          <FadeIn delay={0.06} style={{ zIndex: 3, position: 'relative', marginTop: '8px' }}>
+          <FadeIn delay={0.06} className="scrap-hero-photo" style={{ zIndex: 6, position: 'relative', marginTop: '-6px' }}>
+            <motion.div
+              aria-hidden
+              className="absolute"
+              style={{
+                left: '34%',
+                top: '58%',
+                width: 280,
+                height: 280,
+                transform: 'translate(-50%, -50%)',
+                background:
+                  'radial-gradient(circle at 50% 50%, rgba(236,72,153,0.25) 0%, rgba(124,58,237,0.18) 35%, transparent 70%)',
+                filter: 'blur(14px)',
+                opacity: 0.9,
+                pointerEvents: 'none',
+                zIndex: -1,
+              }}
+              animate={{ scale: [0.98, 1.03, 0.98], opacity: [0.75, 0.95, 0.75] }}
+              transition={{ duration: 6.8, repeat: Infinity, ease: 'easeInOut' }}
+            />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/blog_01-bgxvL7KJUFxdMOtPGfBZy7L44lUCZY.png"
+            <motion.img
+              src="/blog_01.png"
               alt="Isabella, protagonista de la fiesta de XV"
               style={{
                 width: '100%',
-                maxWidth: 360,
+                maxWidth: 520,
                 height: 'auto',
                 display: 'block',
-                transform: 'rotate(-5deg) translateX(-8px)',
-                filter: 'drop-shadow(0 16px 40px rgba(0,0,0,0.75))',
+                transform: 'rotate(-6deg) translateX(-18px) translateY(-6px)',
+                filter: 'drop-shadow(0 20px 60px rgba(0,0,0,0.82))',
               }}
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut' }}
+              whileHover={{ scale: 1.012, rotate: -5.6, x: -14, y: -8 }}
             />
           </FadeIn>
 
           {/* Col 2 — Título central */}
           <FadeIn
             delay={0.12}
-            style={{ zIndex: 4, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '12px', textAlign: 'center' }}
+            className="scrap-hero-title"
+            style={{ zIndex: 7, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '2px', textAlign: 'center', marginLeft: '-22px' }}
           >
+            <div
+              aria-hidden
+              className="absolute -z-10"
+              style={{
+                left: '50%',
+                top: '18%',
+                width: '120%',
+                height: 260,
+                transform: 'translateX(-50%)',
+                background:
+                  'radial-gradient(ellipse 55% 60% at 50% 40%, rgba(124,58,237,0.35) 0%, rgba(192,132,252,0.18) 35%, transparent 70%)',
+                filter: 'blur(6px)',
+                opacity: 0.9,
+              }}
+            />
             {/* Doodle stars arriba del título */}
             <div style={{ position: 'absolute', top: 0, left: '8%', display: 'flex', gap: 4, opacity: 0.6 }}>
               <Sparkle size={14} color="#c084fc" />
@@ -236,18 +763,33 @@ export default function ConocienzoAIsabellaPage() {
                 fontFamily: 'var(--font-sans)',
                 fontStyle: 'italic',
                 fontWeight: 900,
-                fontSize: 'clamp(3.5rem, 10vw, 7rem)',
+                fontSize: 'clamp(3.9rem, 11.5vw, 7.4rem)',
                 background: 'linear-gradient(135deg, #f9a8d4 0%, #c084fc 50%, #a78bfa 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 lineHeight: 0.95,
-                filter: 'drop-shadow(0 0 35px rgba(192,132,252,0.6))',
+                filter: 'drop-shadow(0 0 46px rgba(192,132,252,0.72))',
                 margin: '0 0 6px',
               }}
             >
               Isabella
             </h1>
+
+            <motion.div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: '12%',
+                top: '66%',
+                transform: 'rotate(-10deg)',
+                opacity: 0.55,
+              }}
+              animate={{ y: [0, -2, 0], opacity: [0.45, 0.65, 0.45] }}
+              transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <Sparkle size={18} color="#f472b6" />
+            </motion.div>
 
             {/* Línea marcador cursivo */}
             <svg aria-hidden width="78%" height="14" viewBox="0 0 300 14" fill="none" style={{ marginBottom: 14 }}>
@@ -275,26 +817,36 @@ export default function ConocienzoAIsabellaPage() {
               <span style={{ color: '#f472b6' }}>✨</span>
             </p>
 
-            <HeartOutline size={36} color="#c084fc" />
+            <motion.div
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+              animate={{ opacity: [0.55, 0.85, 0.55] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <HeartOutline size={36} color="#c084fc" />
+            </motion.div>
           </FadeIn>
 
           {/* Col 3 — Nota "Sobre mí" (blog_02 ya tiene estilo cuaderno) */}
           <FadeIn
             delay={0.22}
-            style={{ zIndex: 3, position: 'relative', marginTop: '24px', marginLeft: '-20px' }}
+            className="scrap-hero-note"
+            style={{ zIndex: 8, position: 'relative', marginTop: '10px', marginLeft: '-18px' }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/blog_02-TCluLuwzzghMmZki7QEIUVEF4ewjNI.png"
+            <motion.img
+              src="/blog_02.png"
               alt="Nota de cuaderno 'Sobre mí': Soy soñadora, creativa y súper curiosa"
               style={{
                 width: '100%',
-                maxWidth: 310,
+                maxWidth: 350,
                 height: 'auto',
                 display: 'block',
-                transform: 'rotate(3.5deg)',
-                filter: 'drop-shadow(0 12px 30px rgba(0,0,0,0.68))',
+                transform: 'rotate(7deg) translateY(10px) translateX(10px)',
+                filter: 'drop-shadow(0 16px 46px rgba(0,0,0,0.78))',
               }}
+              animate={{ y: [0, 3, 0] }}
+              transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}
+              whileHover={{ scale: 1.012, rotate: 5.4, x: -6, y: 6 }}
             />
           </FadeIn>
         </div>
@@ -305,16 +857,30 @@ export default function ConocienzoAIsabellaPage() {
       {/* ═══════════════════════════════════════════════════════════ */}
       <section className="relative px-4 sm:px-8 pt-2 pb-4">
         <div
+          aria-hidden
+          className="absolute"
+          style={{
+            left: '50%',
+            top: -22,
+            width: '76%',
+            height: 1,
+            transform: 'translateX(-50%)',
+            background: 'linear-gradient(to right, transparent, rgba(168,85,247,0.45), transparent)',
+            boxShadow: '0 0 16px rgba(168,85,247,0.22)',
+            opacity: 0.55,
+          }}
+        />
+        <div
           className="max-w-6xl mx-auto"
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.1fr)',
-            gap: '0 16px',
+            gap: '0 12px',
             alignItems: 'flex-start',
           }}
         >
           {/* Col 1 — Pasión texto */}
-          <FadeIn delay={0.04} style={{ paddingTop: 32, paddingRight: 8 }}>
+          <FadeIn delay={0.04} style={{ paddingTop: 42, paddingRight: 8, transform: 'rotate(-0.6deg)' }}>
             <p
               style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 600, color: '#c084fc', fontSize: '1.05rem', marginBottom: 8 }}
             >
@@ -350,19 +916,22 @@ export default function ConocienzoAIsabellaPage() {
           </FadeIn>
 
           {/* Col 2 — Foto vóley (blog_03 ya tiene polaroid + tape) */}
-          <FadeIn delay={0.1} style={{ zIndex: 3, position: 'relative', marginTop: '-10px' }}>
+          <FadeIn delay={0.1} style={{ zIndex: 5, position: 'relative', marginTop: '-22px', marginLeft: '-24px' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/blog_03-2bpjLQ5VJvtepMZ7az4eFGvJ9UBxqE.png"
+            <motion.img
+              src="/blog_03.png"
               alt="Isabella con uniforme de vóley sosteniendo un balón"
               style={{
                 width: '100%',
-                maxWidth: 340,
+                maxWidth: 420,
                 height: 'auto',
                 display: 'block',
-                transform: 'rotate(2.5deg)',
-                filter: 'drop-shadow(0 14px 42px rgba(0,0,0,0.72))',
+                transform: 'rotate(3.2deg) translateX(-10px)',
+                filter: 'drop-shadow(0 18px 62px rgba(0,0,0,0.82))',
               }}
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+              whileHover={{ scale: 1.012, rotate: 3.7, x: 14, y: -10 }}
             />
             {/* Heart doodle encima de la foto en la esquina inferior */}
             <div style={{ position: 'absolute', bottom: '14%', right: '4%', opacity: 0.7 }}>
@@ -371,7 +940,7 @@ export default function ConocienzoAIsabellaPage() {
           </FadeIn>
 
           {/* Col 3 — "Pequeñas cosas" lista + blog_04 superpuesto parcialmente */}
-          <FadeIn delay={0.18} style={{ position: 'relative', paddingTop: 16 }}>
+          <FadeIn delay={0.18} style={{ position: 'relative', paddingTop: 0, marginTop: '-10px', marginLeft: '-18px' }}>
             <p
               style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 600, color: '#c084fc', fontSize: '1rem', lineHeight: 1.4, marginBottom: 14 }}
             >
@@ -395,18 +964,21 @@ export default function ConocienzoAIsabellaPage() {
             </ul>
             {/* blog_04 como collage flotando abajo-derecha */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/blog_04-DdSw739X0YRjjwG1in0Vr5kTc39Nmz.png"
+            <motion.img
+              src="/blog_04.png"
               alt="Pequeñas cosas que me gustan: Arte, Disney y Peluches en fotos polaroid"
               style={{
-                width: '110%',
+                width: '104%',
                 maxWidth: 360,
                 height: 'auto',
                 display: 'block',
-                transform: 'rotate(-2.5deg) translateX(8px)',
-                filter: 'drop-shadow(0 12px 36px rgba(0,0,0,0.7))',
+                transform: 'rotate(-3.2deg) translateX(8px) translateY(-6px)',
+                filter: 'drop-shadow(0 18px 58px rgba(0,0,0,0.82))',
                 marginRight: '-16px',
               }}
+              animate={{ y: [0, 3, 0] }}
+              transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut' }}
+              whileHover={{ scale: 1.012, rotate: -3.7, x: 20, y: -14 }}
             />
           </FadeIn>
         </div>
@@ -432,7 +1004,7 @@ export default function ConocienzoAIsabellaPage() {
             >
               Colores que me representan <Heart color="#f472b6" size={16} />
             </p>
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div className="mobile-colors" style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
               {COLORS.map((c, i) => (
                 <motion.div
                   key={c.name}
@@ -459,7 +1031,7 @@ export default function ConocienzoAIsabellaPage() {
           </FadeIn>
 
           {/* Col 2 — Sticky quote */}
-          <FadeIn delay={0.12} style={{ position: 'relative', zIndex: 4, marginTop: 16 }}>
+          <FadeIn delay={0.12} style={{ position: 'relative', zIndex: 7, marginTop: -8, marginLeft: -18 }}>
             <div
               style={{
                 position: 'relative',
@@ -484,24 +1056,22 @@ export default function ConocienzoAIsabellaPage() {
           </FadeIn>
 
           {/* Col 3 — Mi mood label + blog_05 */}
-          <FadeIn delay={0.2} style={{ position: 'relative', marginTop: 8 }}>
-            <p
-              style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 600, color: '#c084fc', fontSize: '1.05rem', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}
-            >
-              Mi mood <Heart color="#f472b6" size={16} />
-            </p>
+          <FadeIn delay={0.2} style={{ position: 'relative', marginTop: -12, marginLeft: -10, zIndex: 6 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/blog_05-cGA2APUcsyudgHXq9Dr2R2uaPaHkr9.png"
+            <motion.img
+              src="/blog_05.png"
               alt="Mi mood: Moda, Música y Anime en polaroids"
               style={{
                 width: '108%',
-                maxWidth: 400,
+                maxWidth: 470,
                 height: 'auto',
                 display: 'block',
-                transform: 'rotate(2.5deg) translateX(6px)',
-                filter: 'drop-shadow(0 12px 36px rgba(0,0,0,0.72))',
+                transform: 'rotate(2.9deg) translateX(12px) translateY(-6px)',
+                filter: 'drop-shadow(0 18px 64px rgba(0,0,0,0.84))',
               }}
+              animate={{ y: [0, -2, 0] }}
+              transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+              whileHover={{ scale: 1.012, rotate: 3.3, x: 14, y: -10 }}
             />
           </FadeIn>
         </div>
@@ -539,7 +1109,7 @@ export default function ConocienzoAIsabellaPage() {
           </FadeIn>
 
           {/* Col 2 — Libreta "Me gusta" */}
-          <FadeIn delay={0.1} style={{ position: 'relative', zIndex: 3, marginTop: 10 }}>
+          <FadeIn delay={0.1} style={{ position: 'relative', zIndex: 6, marginTop: -6, marginLeft: -10 }}>
             <div
               style={{
                 position: 'relative',
@@ -572,7 +1142,7 @@ export default function ConocienzoAIsabellaPage() {
           </FadeIn>
 
           {/* Col 3 — Kraft "Referencias útiles" */}
-          <FadeIn delay={0.18} style={{ position: 'relative', zIndex: 3, marginTop: 20 }}>
+          <FadeIn delay={0.18} style={{ position: 'relative', zIndex: 5, marginTop: 34, marginLeft: -26 }}>
             <div
               style={{
                 position: 'relative',
@@ -709,18 +1279,7 @@ export default function ConocienzoAIsabellaPage() {
           </div>
         </div>
       </footer>
-
-      {/* Responsive: en mobile apilamos en columna */}
-      <style>{`
-        @media (max-width: 768px) {
-          section > div[class*="max-w"] > div,
-          footer > div[class*="max-w"] > div {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 24px !important;
-          }
-        }
-      `}</style>
+      </div>
     </main>
   )
 }
