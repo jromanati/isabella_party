@@ -180,6 +180,11 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
     setTablesError(null)
 
     try {
+      const guestToConfirm = tables.flatMap((t) => t.guests).find((g) => g.id === guestId) ?? null
+      const tableForGuest = guestToConfirm
+        ? (tables.find((t) => t.guests.some((g) => g.id === guestId))?.id ?? null)
+        : null
+
       const supabase = getSupabaseClient()
       const now = new Date().toISOString()
       const { error } = await supabase
@@ -188,6 +193,17 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
         .eq('id', guestId)
 
       if (error) throw error
+
+      if (guestToConfirm) {
+        fetch('/api/rsvp-confirmed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guestName: guestToConfirm.name,
+            tableNumber: tableForGuest,
+          }),
+        }).catch(() => {})
+      }
 
       setTables((prev) =>
         prev.map((t) => ({
@@ -360,7 +376,7 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
               {tables.map((table) => {
                 const isSelected = selectedTable === table.id
                 const isHighlighted = highlightedTable === table.id
-                const imgSize = 'min(44vw, 240px)'
+                const imgSize = 'min(40vw, 210px)'
                 const mobileScale = isSelected || isHighlighted ? 1.03 : 1
 
                 return (
@@ -433,7 +449,7 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
                       className="absolute pointer-events-none flex items-center justify-center"
                       style={{
                         left: '50%',
-                        top: '32%',
+                        top: '28%',
                         transform: 'translate(-50%, -50%)',
                         zIndex: 6,
                       }}
@@ -478,7 +494,7 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
             {tables.map((table) => {
               const isSelected = selectedTable === table.id
               const isHighlighted = highlightedTable === table.id
-              const imgSize = 'clamp(320px, 34vw, 460px)'
+              const imgSize = 'clamp(150px, 16vw, 240px)'
 
               return (
                 <div
@@ -493,7 +509,7 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
                     height: imgSize,
                     transition: 'transform 0.2s ease',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.03)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.015)' }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)' }}
                 >
                   {/* Mesa PNG — mix-blend-mode:screen makes the black bg invisible */}
@@ -573,7 +589,7 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
                     className="absolute pointer-events-none flex items-center justify-center"
                     style={{
                       left: '50%',
-                      top: '32%',
+                      top: '28%',
                       transform: 'translate(-50%, -50%)',
                       zIndex: 6,
                     }}

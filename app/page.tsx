@@ -45,6 +45,25 @@ export default function IsabellaPartyPage() {
 
   useEffect(() => { setMounted(true) }, [])
 
+  useEffect(() => {
+    if (!mounted) return
+    try {
+      const stored = window.localStorage.getItem('isabella_party_entered')
+      if (stored === '1') setEntered(true)
+    } catch {
+      // ignore
+    }
+  }, [mounted])
+
+  const handleEnter = () => {
+    setEntered(true)
+    try {
+      window.localStorage.setItem('isabella_party_entered', '1')
+    } catch {
+      // ignore
+    }
+  }
+
   if (!mounted) return null
 
   return (
@@ -54,7 +73,7 @@ export default function IsabellaPartyPage() {
     >
       <AnimatePresence mode="wait">
         {!entered ? (
-          <CinematicHero key="hero" onEnter={() => setEntered(true)} />
+          <CinematicHero key="hero" onEnter={handleEnter} />
         ) : (
           <PartyEntrance key="party">
 

@@ -1,7 +1,8 @@
 'use client'
 
 import { motion, type Variants } from 'framer-motion'
-import { MapPin, CheckCircle, Navigation } from 'lucide-react'
+import Link from 'next/link'
+import { MapPin, CheckCircle, Navigation, Sparkles } from 'lucide-react'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 40 },
@@ -216,6 +217,77 @@ export default function LocationRsvp({
             >
               Encuentra tu mesa y confirma asistencia
             </motion.button>
+          </div>
+        </motion.div>
+
+        <motion.div
+          custom={2}
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="relative rounded-3xl overflow-hidden"
+          style={{
+            background: 'rgba(10,5,25,0.8)',
+            border: '1px solid rgba(168,85,247,0.25)',
+            boxShadow:
+              '0 0 40px rgba(168,85,247,0.1), 0 20px 60px rgba(0,0,0,0.4)',
+          }}
+        >
+          <div
+            className="absolute top-0 inset-x-0 h-px"
+            style={{
+              background: 'linear-gradient(to right, transparent, #a855f7, transparent)',
+              boxShadow: '0 0 8px #a855f7',
+            }}
+          />
+
+          <div className="p-7 flex flex-col gap-5">
+            <div className="flex items-start gap-4">
+              <div
+                className="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: 'rgba(168,85,247,0.15)',
+                  border: '1px solid rgba(168,85,247,0.35)',
+                  boxShadow: '0 0 20px rgba(168,85,247,0.2)',
+                }}
+              >
+                <Sparkles className="w-5 h-5" style={{ color: '#c084fc' }} />
+              </div>
+              <div>
+                <p
+                  className="text-xs font-semibold tracking-[0.2em] uppercase mb-1"
+                  style={{ color: '#c084fc', fontFamily: 'var(--font-body)' }}
+                >
+                  Conoce sus gustos
+                </p>
+                <p className="text-white font-semibold text-lg leading-snug font-sans">
+                  Pequeñas pistas para sorprenderla
+                </p>
+                <p
+                  className="text-sm mt-1 leading-relaxed"
+                  style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-body)' }}
+                >
+                  Una guía emocional y moderna para elegir un detalle que conecte con su esencia.
+                </p>
+              </div>
+            </div>
+
+            <motion.div whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                href="/regalos"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-sm text-white"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(168,85,247,0.65), rgba(59,130,246,0.55))',
+                  border: '1px solid rgba(168,85,247,0.4)',
+                  boxShadow: '0 0 24px rgba(168,85,247,0.2)',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >
+                <Sparkles className="w-4 h-4" />
+                Explorar gustos
+              </Link>
+            </motion.div>
           </div>
         </motion.div>
       </div>
