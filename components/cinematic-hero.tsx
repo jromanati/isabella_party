@@ -184,7 +184,7 @@ export default function CinematicHero({
             className="text-xs font-semibold tracking-[0.25em] uppercase"
             style={{ color: '#fda4cf', fontFamily: 'var(--font-body)' }}
           >
-            11 de Julio · 2025
+            11 de Julio · 2026
           </span>
         </motion.div>
 

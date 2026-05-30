@@ -219,7 +219,7 @@ export default function IsabellaPartyPage() {
                       fontFamily: 'var(--font-body)',
                     }}
                   >
-                    Neon Glow Party · 2025
+                    Neon Glow Party · 2026
                   </span>
                   <div
                     className="h-px w-12"

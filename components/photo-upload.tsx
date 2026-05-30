@@ -219,7 +219,7 @@ export default function PhotoUpload() {
             {/* Date display */}
             {!isEnabled && (
               <div className="flex items-center gap-3">
-                {['11', '·', 'Jul', '·', '2025'].map((val, i) => (
+                {['11', '·', 'Jul', '·', '2026'].map((val, i) => (
                   val === '·' ? (
                     <span key={i} style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
                   ) : (

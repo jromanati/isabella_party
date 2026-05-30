@@ -422,7 +422,7 @@ export default function SlideshowPage() {
             className="text-xs tracking-[0.3em] uppercase"
             style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-body)' }}
           >
-            Neon Glow Party · 2025
+            Neon Glow Party · 2026
           </motion.span>
         </div>
 

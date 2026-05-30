@@ -18,7 +18,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Isabella XV — Neon Glow Party',
-  description: 'Una noche para recordar. 11 de Julio 2025.',
+  description: 'Una noche para recordar. 11 de Julio 2026.',
   themeColor: '#050308',
 }
 

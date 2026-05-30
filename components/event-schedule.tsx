@@ -37,7 +37,7 @@ export default function EventSchedule() {
             className="text-xs font-semibold tracking-[0.35em] uppercase mb-3"
             style={{ color: '#60a5fa', fontFamily: 'var(--font-body)' }}
           >
-            11 de Julio · 2025
+            11 de Julio · 2026
           </p>
           <h2
             className="font-sans font-black text-4xl sm:text-5xl italic leading-tight"
