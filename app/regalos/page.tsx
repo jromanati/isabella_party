@@ -95,11 +95,32 @@ function HeartOutline({ size = 32, color = '#c084fc', style = {} }: { size?: num
 
 /* ─── Color swatches ────────────────────────────────────────────── */
 const COLORS = [
-  { name: 'Morado', hex: '#7c3aed', glow: 'rgba(124,58,237,0.75)' },
-  { name: 'Lila', hex: '#c084fc', glow: 'rgba(192,132,252,0.7)' },
-  { name: 'Negro', hex: '#111118', glow: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.22)' },
-  { name: 'Blanco', hex: '#f0eeff', glow: 'rgba(240,238,255,0.5)' },
-  { name: 'Rosado', hex: '#f472b6', glow: 'rgba(244,114,182,0.7)' },
+  {
+    name: 'Negro',
+    hex: '#111118',
+    glow: 'rgba(255,255,255,0.18)',
+    border: '1px solid rgba(255,255,255,0.22)',
+  },
+  {
+    name: 'Azul Marino',
+    hex: '#1e3a8a',
+    glow: 'rgba(30,58,138,0.65)',
+  },
+  {
+    name: 'Azul Eléctrico',
+    hex: '#2563eb',
+    glow: 'rgba(37,99,235,0.75)',
+  },
+  {
+    name: 'Azul Celeste',
+    hex: '#60a5fa',
+    glow: 'rgba(96,165,250,0.70)',
+  },
+  {
+    name: 'Lila',
+    hex: '#c084fc',
+    glow: 'rgba(192,132,252,0.70)',
+  },
 ]
 
 /* ══════════════════════════════════════════════════════════════════ */
@@ -392,7 +413,6 @@ export default function ConocienzoAIsabellaPage() {
                   'Dibujar y ser creativa',
                   'Disney (soy fan total)',
                   'Comics y series',
-                  'Atardeceres',
                   'Detalles bonitos',
                   'Viajar y conocer lugares nuevos',
                 ].map((item) => (
@@ -533,15 +553,25 @@ export default function ConocienzoAIsabellaPage() {
                 }}
               >
                 <Tape rotate="-3deg" top="-12px" left="50%" tx="-50%" w={52} />
-                <p style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 700, color: '#c084fc', fontSize: '0.98rem', margin: '0 0 12px', textAlign: 'center' }}>
-                  Me gusta
+                <p
+                  style={{
+                    fontFamily: 'var(--font-sans)',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    color: '#c084fc',
+                    fontSize: '0.98rem',
+                    margin: '0 0 12px',
+                    textAlign: 'center'
+                  }}
+                >
+                  Cosas que me hacen feliz ✨
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  {['Accesorios', 'Gorros', 'Zapatos lindos', 'Oversize', 'Colores neutros', 'Detalles minimalistas'].map((item) => (
+                  {['💄 Maquillaje', '🧸 Peluches', '👕 Ropa', '🧴 Productos para el pelo', '🎨 Materiales de arte', '✨ Accesorios dorados'].map((item) => (
                     <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                      <Heart color="#f472b6" size={12} />
+                      <span style={{ fontSize: 12 }}>{item.split(' ')[0]}</span>
                       <span style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.72)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {item}
+                        {item.split(' ').slice(1).join(' ')}
                       </span>
                     </div>
                   ))}
@@ -564,15 +594,16 @@ export default function ConocienzoAIsabellaPage() {
                 <Tape rotate="-5deg" top="-12px" left="74%" tx="-50%" w={46} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.72rem', color: '#2d1605', margin: 0 }}>
-                    Referencias Útiles
+                    Guía para acertar 🎁
                   </p>
                   <Heart color="#7c3aed" size={13} />
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    { icon: '👕', label: 'Ropa:', val: 'Por confirmar' },
-                    { icon: '👟', label: 'Calzado:', val: 'Por confirmar' },
-                    { icon: '🎨', label: 'Colores favoritos:', val: 'Morado, lila, negro' },
+                    { icon: '👕', label: 'Camisa', val: 'Talla S (90)' },
+                    { icon: '👖', label: 'Pantalón', val: 'Talla 36' },
+                    { icon: '👟', label: 'Zapatos', val: 'Talla 36' },
+                    { icon: '💍', label: 'Accesorios', val: 'Color Oro' },
                   ].map((row) => (
                     <li key={row.label} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: '0.88rem' }}>
                       <span style={{ fontSize: 15, lineHeight: 1.5 }}>{row.icon}</span>
@@ -583,6 +614,45 @@ export default function ConocienzoAIsabellaPage() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            </FadeIn>
+
+            <FadeIn delay={0.16}>
+              <div
+                style={{
+                  position: 'relative',
+                  background: 'linear-gradient(135deg, #12091f 0%, #0d0620 100%)',
+                  border: '1px solid rgba(168,85,247,0.34)',
+                  borderRadius: 4,
+                  boxShadow: '0 8px 28px rgba(0,0,0,0.62), 0 0 28px rgba(168,85,247,0.06)',
+                  padding: '16px 16px',
+                  transform: 'rotate(0.8deg)',
+                }}
+              >
+                <Tape rotate="-2deg" top="-12px" left="50%" tx="-50%" w={52} />
+                <p
+                  style={{
+                    fontFamily: 'var(--font-sans)',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    color: '#c084fc',
+                    fontSize: '0.98rem',
+                    margin: '0 0 12px',
+                    textAlign: 'center'
+                  }}
+                >
+                  También me encantaría...
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {['💄 Un maquillaje bonito', '🧸 Un peluche tierno', '🎨 Materiales para dibujar o pintar', '👗 Alguna prenda de ropa', '🧴 Productos para cuidar mi cabello', '✨ Algún accesorio dorado'].map((item) => (
+                    <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                      <span style={{ fontSize: 12 }}>{item.split(' ')[0]}</span>
+                      <span style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.72)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {item.split(' ').slice(1).join(' ')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </FadeIn>
           </div>
@@ -605,9 +675,9 @@ export default function ConocienzoAIsabellaPage() {
                 <Tape rotate="-4deg" top="-13px" left="24%" tx="-50%" w={58} />
                 <Tape rotate="5deg" top="-13px" left="76%" tx="-50%" w={50} />
                 <p style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontSize: '0.98rem', color: '#2d1a45', lineHeight: 1.85, margin: 0 }}>
-                  <span style={{ color: '#7c3aed', fontWeight: 700 }}>No se trata</span> del regalo perfecto, sino de un detalle hecho con cariño.
+                  El mejor regalo será compartir este día tan especial contigo. 💜
                   <br />
-                  Lo más importante será compartir esta noche con las personas que quiero.
+                  Si además decides sorprenderme con un detalle, estas ideas pueden ayudarte a escoger algo que realmente disfrutaré.
                 </p>
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 18 }}>
@@ -817,6 +887,10 @@ export default function ConocienzoAIsabellaPage() {
               <span style={{ color: '#f472b6' }}>✨</span>
             </p>
 
+            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)', lineHeight: 1.6, maxWidth: 320, margin: '0 auto 16px', textAlign: 'center', fontStyle: 'italic' }}>
+              No hay compromiso de regalar nada 💜, pero si estabas pensando en hacerlo, aquí encontrarás algunas ideas para ayudarte a elegir algo que realmente me haga feliz.
+            </p>
+
             <motion.div
               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
               animate={{ opacity: [0.55, 0.85, 0.55] }}
@@ -952,7 +1026,6 @@ export default function ConocienzoAIsabellaPage() {
                 'Dibujar y ser creativa',
                 'Disney (soy fan total)',
                 'Comics y series',
-                'Atardeceres',
                 'Detalles bonitos',
                 'Viajar y conocer lugares nuevos',
               ].map((item) => (
@@ -1125,10 +1198,10 @@ export default function ConocienzoAIsabellaPage() {
               <p
                 style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 600, color: '#c084fc', fontSize: '1rem', marginBottom: 14, textAlign: 'center' }}
               >
-                Me gusta
+                Cosas que me hacen feliz ✨
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {['Accesorios', 'Gorros', 'Zapatos lindos', 'Oversize', 'Colores neutros', 'Detalles minimalistas'].map((item) => (
+                {['💄 Maquillaje', '🧸 Peluches', '👕 Ropa', '🧴 Productos para el pelo', '🎨 Materiales de arte', '✨ Accesorios dorados'].map((item) => (
                   <li key={item} style={{ textAlign: 'center', fontSize: '0.9rem', color: 'rgba(255,255,255,0.72)' }}>
                     {item}
                   </li>
@@ -1158,16 +1231,17 @@ export default function ConocienzoAIsabellaPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', color: '#2d1605', margin: 0 }}>
-                  Referencias Útiles
+                  Guía para acertar 🎁
                 </p>
                 <Heart color="#7c3aed" size={13} />
               </div>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {[
-                  { icon: '👕', label: 'Ropa:', val: 'Por confirmar' },
-                  { icon: '👟', label: 'Calzado:', val: 'Por confirmar' },
-                  { icon: '🎨', label: 'Colores favoritos:', val: 'Morado, lila, negro' },
+                  { icon: '👕', label: 'Camisa', val: 'Talla S (90)' },
+                  { icon: '👖', label: 'Pantalón', val: 'Talla 36' },
+                  { icon: '👟', label: 'Zapatos', val: 'Talla 36' },
+                  { icon: '💍', label: 'Accesorios', val: 'Color Oro' },
                 ].map((row) => (
                   <li key={row.label} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: '0.88rem' }}>
                     <span style={{ fontSize: 15, lineHeight: 1.5 }}>{row.icon}</span>
@@ -1178,6 +1252,57 @@ export default function ConocienzoAIsabellaPage() {
                   </li>
                 ))}
               </ul>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* ROW 5 — TAMBIÉN ME ENCANTARÍA...                           */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="relative px-4 sm:px-8 pt-4 pb-4">
+        <div
+          className="max-w-6xl mx-auto"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0,1fr)',
+            gap: '0 16px',
+            alignItems: 'flex-start',
+            justifyContent: 'center'
+          }}
+        >
+          <FadeIn delay={0.04} style={{ position: 'relative', zIndex: 6, maxWidth: 500, margin: '0 auto' }}>
+            <div
+              style={{
+                position: 'relative',
+                background: 'linear-gradient(135deg, #12091f 0%, #0d0620 100%)',
+                border: '1px solid rgba(168,85,247,0.38)',
+                borderRadius: 4,
+                boxShadow: '0 8px 30px rgba(0,0,0,0.65), 0 0 28px rgba(168,85,247,0.07)',
+                padding: '26px 22px',
+                transform: 'rotate(-0.8deg)',
+              }}
+            >
+              <Tape rotate="2deg" top="-12px" left="50%" tx="-50%" w={56} />
+              <p
+                style={{ fontFamily: 'var(--font-sans)', fontStyle: 'italic', fontWeight: 600, color: '#c084fc', fontSize: '1rem', marginBottom: 14, textAlign: 'center' }}
+              >
+                También me encantaría...
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {['💄 Un maquillaje bonito', '🧸 Un peluche tierno', '🎨 Materiales para dibujar o pintar', '👗 Alguna prenda de ropa', '🧴 Productos para cuidar mi cabello', '✨ Algún accesorio dorado'].map((item) => (
+                  <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <span style={{ fontSize: 14 }}>{item.split(' ')[0]}</span>
+                    <span style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.72)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {item.split(' ').slice(1).join(' ')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {/* Heart doodle bottom */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16, opacity: 0.5 }}>
+                <HeartOutline size={22} color="#c084fc" />
+              </div>
             </div>
           </FadeIn>
         </div>
@@ -1240,10 +1365,8 @@ export default function ConocienzoAIsabellaPage() {
                   lineHeight: 1.85,
                 }}
               >
-                <span style={{ color: '#7c3aed', fontWeight: 700 }}>No se trata</span> del regalo perfecto,<br />
-                sino de un detalle hecho con cariño.<br />
-                Lo más importante será compartir esta noche<br />
-                con las personas que quiero.
+                El mejor regalo será compartir este día tan especial contigo. 💜<br />
+                Si además decides sorprenderme con un detalle, estas ideas pueden ayudarte a escoger algo que realmente disfrutaré.
               </p>
             </div>
 
