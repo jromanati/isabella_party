@@ -28,7 +28,7 @@ export class SupabaseGalleryService {
         caption: request.caption || '',
         message: request.message || '',
         source: request.source || 'guest_upload',
-        status: request.status || 'pending',
+        status: request.status,
         is_public: true,
         is_featured: false,
         is_album_candidate: false,
