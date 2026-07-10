@@ -4,88 +4,29 @@ import type { Guest, RsvpRequest, RsvpResponse } from '@/types/guest'
 import type { ApiResponse } from '@/lib/api'
 
 /**
- * Configuración del sistema
- */
-const USE_BACKEND_API = process.env.NEXT_PUBLIC_USE_BACKEND_API === 'true'
-const USE_SUPABASE = process.env.NEXT_PUBLIC_USE_SUPABASE === 'true'
-
-/**
- * Servicio adaptador que elige dinámicamente entre Backend API y Supabase
- * para la gestión de invitados según la configuración de variables de entorno
+ * Servicio adaptador que usa Supabase directamente
  */
 export class GuestAdapter {
   /**
-   * Determina qué servicio usar basado en la configuración
+   * Siempre usa Supabase
    */
   private static getService() {
-    if (USE_BACKEND_API) {
-      console.log('🔧 GuestAdapter: Usando Backend API')
-      return 'api'
-    } else if (USE_SUPABASE) {
-      console.log('🔧 GuestAdapter: Usando Supabase')
-      return 'supabase'
-    } else {
-      // Por defecto usar Backend API
-      console.log('🔧 GuestAdapter: Usando Backend API (default)')
-      return 'api'
-    }
+    console.log('🔧 GuestAdapter: Usando Supabase (forzado)')
+    return 'supabase'
   }
 
   /**
    * Obtener invitados usando el servicio configurado
    */
   static async getGuests(): Promise<ApiResponse<Guest[]>> {
-    const service = this.getService()
-    
     try {
       console.log('📥 GuestAdapter: Cargando invitados')
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await GuestService.getGuests()
-        
-        if (result.success) {
-          console.log(`✅ GuestAdapter: ${result.data?.length || 0} invitados cargados desde API`)
-        } else {
-          console.error('❌ GuestAdapter: Error cargando invitados desde API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 GuestAdapter: Intentando fallback a Supabase')
-            try {
-              const fallbackResult = await this.getGuestsFromSupabase()
-              if (fallbackResult.success) {
-                console.log('✅ GuestAdapter: Fallback a Supabase exitoso')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ GuestAdapter: Fallback a Supabase falló:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.getGuestsFromSupabase()
-      }
+      // Usar Supabase directamente
+      return await this.getGuestsFromSupabase()
       
     } catch (error) {
       console.error('🚨 GuestAdapter: Error crítico en getGuests:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 GuestAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.getGuestsFromSupabase()
-          if (fallbackResult.success) {
-            console.log('✅ GuestAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ GuestAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -142,57 +83,14 @@ export class GuestAdapter {
    * Actualizar RSVP usando el servicio configurado
    */
   static async updateRsvp(guestId: number, payload: RsvpRequest): Promise<ApiResponse<RsvpResponse>> {
-    const service = this.getService()
-    
     try {
       console.log(`📝 GuestAdapter: Actualizando RSVP para invitado ${guestId}`)
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await GuestService.updateRsvp(guestId, payload)
-        
-        if (result.success) {
-          console.log('✅ GuestAdapter: RSVP actualizado via API')
-        } else {
-          console.error('❌ GuestAdapter: Error actualizando RSVP via API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 GuestAdapter: Intentando fallback a Supabase para RSVP')
-            try {
-              const fallbackResult = await this.updateRsvpInSupabase(guestId, payload)
-              if (fallbackResult.success) {
-                console.log('✅ GuestAdapter: Fallback a Supabase exitoso para RSVP')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ GuestAdapter: Fallback a Supabase falló para RSVP:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.updateRsvpInSupabase(guestId, payload)
-      }
+      // Usar Supabase directamente
+      return await this.updateRsvpInSupabase(guestId, payload)
       
     } catch (error) {
       console.error('🚨 GuestAdapter: Error crítico en updateRsvp:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 GuestAdapter: Intentando fallback a Supabase (error catch) para RSVP')
-        try {
-          const fallbackResult = await this.updateRsvpInSupabase(guestId, payload)
-          if (fallbackResult.success) {
-            console.log('✅ GuestAdapter: Fallback a Supabase exitoso (catch) para RSVP')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ GuestAdapter: Fallback a Supabase falló (catch) para RSVP:', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -245,9 +143,9 @@ export class GuestAdapter {
    */
   static getConfig() {
     return {
-      useBackendAPI: USE_BACKEND_API,
-      useSupabase: USE_SUPABASE,
-      currentService: USE_BACKEND_API ? 'Backend API' : USE_SUPABASE ? 'Supabase' : 'Backend API (default)'
+      useBackendAPI: false,
+      useSupabase: true,
+      currentService: 'Supabase (forzado)'
     }
   }
 
@@ -257,16 +155,7 @@ export class GuestAdapter {
   static async checkServices(): Promise<{ api: boolean; supabase: boolean }> {
     const results = { api: false, supabase: false }
     
-    // Probar Backend API
-    try {
-      const apiTest = await GuestService.getGuests()
-      results.api = apiTest.success
-    } catch (error) {
-      console.error('Backend API check failed:', error)
-      results.api = false
-    }
-    
-    // Probar Supabase
+    // Solo probar Supabase (forzado)
     try {
       const supabaseTest = await this.getGuestsFromSupabase()
       results.supabase = supabaseTest.success

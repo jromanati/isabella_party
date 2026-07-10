@@ -5,31 +5,15 @@ import type { ApiResponse } from '@/lib/api'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
 /**
- * Configuración del sistema
- */
-const USE_BACKEND_API = process.env.NEXT_PUBLIC_USE_BACKEND_API === 'true'
-const USE_SUPABASE = process.env.NEXT_PUBLIC_USE_SUPABASE === 'true'
-
-/**
- * Servicio adaptador que elige dinámicamente entre Backend API y Supabase
- * según la configuración de variables de entorno
+ * Servicio adaptador que usa Supabase directamente
  */
 export class GalleryAdapter {
   /**
-   * Determina qué servicio usar basado en la configuración
+   * Siempre usa Supabase
    */
   private static getService() {
-    if (USE_BACKEND_API) {
-      console.log('🔧 GalleryAdapter: Usando Backend API')
-      return GalleryService
-    } else if (USE_SUPABASE) {
-      console.log('🔧 GalleryAdapter: Usando Supabase')
-      return SupabaseGalleryService
-    } else {
-      // Por defecto usar Backend API
-      console.log('🔧 GalleryAdapter: Usando Backend API (default)')
-      return GalleryService
-    }
+    console.log('🔧 GalleryAdapter: Usando Supabase (forzado)')
+    return SupabaseGalleryService
   }
 
   /**
@@ -46,39 +30,11 @@ export class GalleryAdapter {
         console.log('✅ GalleryAdapter: Foto subida exitosamente')
       } else {
         console.error('❌ GalleryAdapter: Error subiendo foto:', result.error)
-        
-        // Si el servicio principal falla y estamos usando API, intentar fallback a Supabase
-        if (USE_BACKEND_API && !USE_SUPABASE) {
-          console.log('🔄 GalleryAdapter: Intentando fallback a Supabase')
-          try {
-            const fallbackResult = await SupabaseGalleryService.uploadPhoto(request)
-            if (fallbackResult.success) {
-              console.log('✅ GalleryAdapter: Fallback a Supabase exitoso')
-              return fallbackResult
-            }
-          } catch (fallbackError) {
-            console.error('❌ GalleryAdapter: Fallback a Supabase falló:', fallbackError)
-          }
-        }
       }
       
       return result
     } catch (error) {
       console.error('🚨 GalleryAdapter: Error crítico en uploadPhoto:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (USE_BACKEND_API && !USE_SUPABASE) {
-        console.log('🔄 GalleryAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await SupabaseGalleryService.uploadPhoto(request)
-          if (fallbackResult.success) {
-            console.log('✅ GalleryAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ GalleryAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -101,39 +57,11 @@ export class GalleryAdapter {
         console.log(`✅ GalleryAdapter: ${result.data?.length || 0} fotos cargadas`)
       } else {
         console.error('❌ GalleryAdapter: Error cargando fotos:', result.error)
-        
-        // Si el servicio principal falla y estamos usando API, intentar fallback a Supabase
-        if (USE_BACKEND_API && !USE_SUPABASE) {
-          console.log('🔄 GalleryAdapter: Intentando fallback a Supabase para getPhotos')
-          try {
-            const fallbackResult = await SupabaseGalleryService.getPhotos(limit, offset)
-            if (fallbackResult.success) {
-              console.log('✅ GalleryAdapter: Fallback a Supabase exitoso para getPhotos')
-              return fallbackResult
-            }
-          } catch (fallbackError) {
-            console.error('❌ GalleryAdapter: Fallback a Supabase falló para getPhotos:', fallbackError)
-          }
-        }
       }
       
       return result
     } catch (error) {
       console.error('🚨 GalleryAdapter: Error crítico en getPhotos:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (USE_BACKEND_API && !USE_SUPABASE) {
-        console.log('🔄 GalleryAdapter: Intentando fallback a Supabase (error catch) para getPhotos')
-        try {
-          const fallbackResult = await SupabaseGalleryService.getPhotos(limit, offset)
-          if (fallbackResult.success) {
-            console.log('✅ GalleryAdapter: Fallback a Supabase exitoso (catch) para getPhotos')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ GalleryAdapter: Fallback a Supabase falló (catch) para getPhotos:', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -146,37 +74,14 @@ export class GalleryAdapter {
    * Actualizar status de foto usando el servicio configurado
    */
   static async updatePhotoStatus(id: string, status: 'pending' | 'approved' | 'rejected'): Promise<ApiResponse<GalleryPhoto>> {
-    const service = this.getService()
-    
     try {
       console.log(`📝 GalleryAdapter: Actualizando status de foto ID: ${id} a ${status}`)
       
-      if (service === 'api') {
-        // Usar Backend API - GalleryService debería tener un método de actualización
-        // Por ahora, implementamos solo para Supabase
-        console.log('⚠️ GalleryAdapter: Actualización vía API no implementada, usando fallback a Supabase')
-        return await this.updatePhotoStatusInSupabase(id, status)
-      } else {
-        // Usar Supabase directamente
-        return await this.updatePhotoStatusInSupabase(id, status)
-      }
+      // Usar Supabase directamente
+      return await this.updatePhotoStatusInSupabase(id, status)
       
     } catch (error) {
       console.error('🚨 GalleryAdapter: Error crítico en updatePhotoStatus:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 GalleryAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.updatePhotoStatusInSupabase(id, status)
-          if (fallbackResult.success) {
-            console.log('✅ GalleryAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ GalleryAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -199,39 +104,11 @@ export class GalleryAdapter {
         console.log('✅ GalleryAdapter: Foto encontrada')
       } else {
         console.error('❌ GalleryAdapter: Error buscando foto:', result.error)
-        
-        // Si el servicio principal falla y estamos usando API, intentar fallback a Supabase
-        if (USE_BACKEND_API && !USE_SUPABASE) {
-          console.log('🔄 GalleryAdapter: Intentando fallback a Supabase para getPhotoById')
-          try {
-            const fallbackResult = await SupabaseGalleryService.getPhotoById(id)
-            if (fallbackResult.success) {
-              console.log('✅ GalleryAdapter: Fallback a Supabase exitoso para getPhotoById')
-              return fallbackResult
-            }
-          } catch (fallbackError) {
-            console.error('❌ GalleryAdapter: Fallback a Supabase falló para getPhotoById:', fallbackError)
-          }
-        }
       }
       
       return result
     } catch (error) {
       console.error('🚨 GalleryAdapter: Error crítico en getPhotoById:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (USE_BACKEND_API && !USE_SUPABASE) {
-        console.log('🔄 GalleryAdapter: Intentando fallback a Supabase (error catch) para getPhotoById')
-        try {
-          const fallbackResult = await SupabaseGalleryService.getPhotoById(id)
-          if (fallbackResult.success) {
-            console.log('✅ GalleryAdapter: Fallback a Supabase exitoso (catch) para getPhotoById')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ GalleryAdapter: Fallback a Supabase falló (catch) para getPhotoById:', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -245,9 +122,9 @@ export class GalleryAdapter {
    */
   static getConfig() {
     return {
-      useBackendAPI: USE_BACKEND_API,
-      useSupabase: USE_SUPABASE,
-      currentService: USE_BACKEND_API ? 'Backend API' : USE_SUPABASE ? 'Supabase' : 'Backend API (default)'
+      useBackendAPI: false,
+      useSupabase: true,
+      currentService: 'Supabase (forzado)'
     }
   }
 
@@ -257,16 +134,7 @@ export class GalleryAdapter {
   static async checkServices(): Promise<{ backend: boolean; supabase: boolean }> {
     const results = { backend: false, supabase: false }
     
-    // Probar Backend API
-    try {
-      const backendTest = await GalleryService.getPhotos(1, 0)
-      results.backend = backendTest.success
-    } catch (error) {
-      console.error('Backend API check failed:', error)
-      results.backend = false
-    }
-    
-    // Probar Supabase
+    // Solo probar Supabase (forzado)
     try {
       const supabaseTest = await SupabaseGalleryService.getPhotos(1, 0)
       results.supabase = supabaseTest.success
@@ -291,31 +159,7 @@ export class GalleryAdapter {
     try {
       console.log('📤 GalleryAdapter: Subida legacy con nombre:', guestName)
       
-      // Si estamos en modo backend, usar el nuevo sistema
-      if (USE_BACKEND_API) {
-        // Crear un Guest object simulado para compatibilidad
-        const mockGuest = {
-          id: 0, // ID temporal
-          full_name: guestName,
-        }
-        
-        const uploadRequest = {
-          file,
-          uploaded_by_guest: 0,
-          uploaded_by_name: guestName,
-          source: 'guest_upload',
-          status: initialStatus || 'pending',
-        }
-        
-        const response = await GalleryAdapter.uploadPhoto(uploadRequest)
-        if (!response.success) {
-          throw new Error(response.error || 'Error subiendo foto')
-        }
-        
-        return { status: response.data.status }
-      }
-      
-      // Si estamos en modo Supabase, usar el flujo original
+      // Usar siempre el flujo original de Supabase
       return await this.uploadPhotoOriginalSupabase(guestName, file, initialStatus)
       
     } catch (error) {

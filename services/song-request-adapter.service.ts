@@ -4,88 +4,29 @@ import type { SongRequest, SongRequestCreate, PublicSongRequest } from '@/types/
 import type { ApiResponse } from '@/lib/api'
 
 /**
- * Configuración del sistema
- */
-const USE_BACKEND_API = process.env.NEXT_PUBLIC_USE_BACKEND_API === 'true'
-const USE_SUPABASE = process.env.NEXT_PUBLIC_USE_SUPABASE === 'true'
-
-/**
- * Servicio adaptador que elige dinámicamente entre Backend API y Supabase
- * para la gestión de solicitudes de canciones según la configuración de variables de entorno
+ * Servicio adaptador que usa Supabase directamente
  */
 export class SongRequestAdapter {
   /**
-   * Determina qué servicio usar basado en la configuración
+   * Siempre usa Supabase
    */
   private static getService() {
-    if (USE_BACKEND_API) {
-      console.log('🔧 SongRequestAdapter: Usando Backend API')
-      return 'api'
-    } else if (USE_SUPABASE) {
-      console.log('🔧 SongRequestAdapter: Usando Supabase')
-      return 'supabase'
-    } else {
-      // Por defecto usar Backend API
-      console.log('🔧 SongRequestAdapter: Usando Backend API (default)')
-      return 'api'
-    }
+    console.log('🔧 SongRequestAdapter: Usando Supabase (forzado)')
+    return 'supabase'
   }
 
   /**
    * Crear solicitud de canción usando el servicio configurado
    */
   static async createSongRequest(songRequest: SongRequestCreate): Promise<ApiResponse<SongRequest>> {
-    const service = this.getService()
-    
     try {
       console.log('📤 SongRequestAdapter: Creando solicitud de canción')
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await SongRequestService.createSongRequest(songRequest)
-        
-        if (result.success) {
-          console.log('✅ SongRequestAdapter: Solicitud creada via API')
-        } else {
-          console.error('❌ SongRequestAdapter: Error creando solicitud via API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase')
-            try {
-              const fallbackResult = await this.createSongRequestInSupabase(songRequest)
-              if (fallbackResult.success) {
-                console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ SongRequestAdapter: Fallback a Supabase falló:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.createSongRequestInSupabase(songRequest)
-      }
+      // Usar Supabase directamente
+      return await this.createSongRequestInSupabase(songRequest)
       
     } catch (error) {
       console.error('🚨 SongRequestAdapter: Error crítico en createSongRequest:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.createSongRequestInSupabase(songRequest)
-          if (fallbackResult.success) {
-            console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ SongRequestAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -98,57 +39,14 @@ export class SongRequestAdapter {
    * Obtener todas las solicitudes de canciones (para DJ/admin)
    */
   static async getSongRequests(params?: any): Promise<ApiResponse<SongRequest[]>> {
-    const service = this.getService()
-    
     try {
       console.log('📥 SongRequestAdapter: Cargando solicitudes de canciones')
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await SongRequestService.getSongRequests(params)
-        
-        if (result.success) {
-          console.log(`✅ SongRequestAdapter: ${result.data?.length || 0} solicitudes cargadas desde API`)
-        } else {
-          console.error('❌ SongRequestAdapter: Error cargando solicitudes desde API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase')
-            try {
-              const fallbackResult = await this.getSongRequestsFromSupabase(params)
-              if (fallbackResult.success) {
-                console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ SongRequestAdapter: Fallback a Supabase falló:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.getSongRequestsFromSupabase(params)
-      }
+      // Usar Supabase directamente
+      return await this.getSongRequestsFromSupabase(params)
       
     } catch (error) {
       console.error('🚨 SongRequestAdapter: Error crítico en getSongRequests:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.getSongRequestsFromSupabase(params)
-          if (fallbackResult.success) {
-            console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ SongRequestAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
