@@ -128,7 +128,6 @@ export class SupabaseGalleryService {
       const { data, error } = await this.supabase
         .from('photos')
         .select('id, guest_name, image_url, public_id, status, created_at')
-        .eq('status', 'approved')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1) as any
 

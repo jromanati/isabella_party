@@ -33,10 +33,7 @@ export default function PlaylistPage() {
 
   async function refreshList() {
     try {
-      // Autenticación para obtener datos completos
-      const token = await AuthService.getValidToken()
-      if (!token) return
-
+      // Usar Supabase directamente - no requiere autenticación para leer playlist
       // Obtener playlist pública
       const playlistResponse = await SongRequestAdapter.getPublicPlaylist()
       if (playlistResponse.success && playlistResponse.data) {

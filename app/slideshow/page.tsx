@@ -245,11 +245,7 @@ export default function SlideshowPage() {
         setPhotosLoading(true)
         setPhotosError(null)
 
-        // Asegurar autenticación antes de cargar fotos
-        const token = await AuthService.getValidToken()
-        if (!token) {
-          throw new Error('No se pudo autenticar con la API')
-        }
+        // Usar Supabase directamente - no requiere autenticación para leer fotos
 
         const response = await GalleryAdapter.getPhotos()
         

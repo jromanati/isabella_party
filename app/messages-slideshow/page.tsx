@@ -381,11 +381,8 @@ export default function MessagesSlideshowPage() {
   useEffect(() => {
     const loadMessages = async () => {
       try {
-        const token = await AuthService.getValidToken()
-        if (!token) {
-          setError('No se pudo autenticar')
-          return
-        }
+        // Usar Supabase directamente - no requiere autenticación para leer mensajes
+        setError(null)
 
         const response = await GuestMessageAdapter.getPublicMessages()
         if (response.success && response.data) {

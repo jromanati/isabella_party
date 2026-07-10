@@ -72,7 +72,6 @@ function MessageCard({ message }: { message: GuestMessage }) {
 }
 
 function MessageUploadCard({
-  eventProfile,
   onUpload,
   selectedGuest,
   setSelectedGuest,
@@ -87,7 +86,6 @@ function MessageUploadCard({
   error,
   setError,
 }: {
-  eventProfile: any
   onUpload: (
     guest: Guest,
     messageData: Omit<GuestMessageCreate, 'guest' | 'author_name'>
@@ -226,7 +224,6 @@ function MessageUploadCard({
 }
 
 export default function MensajesPage() {
-  const [eventProfile, setEventProfile] = useState<any>(null)
   const [messages, setMessages] = useState<GuestMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -238,25 +235,6 @@ export default function MensajesPage() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
 
-  // Cargar perfil del evento
-  useEffect(() => {
-    const loadEventProfile = async () => {
-      try {
-        const token = await AuthService.getValidToken()
-        if (!token) return
-
-        const response = await EventService.getEventProfile()
-        if (response.success && response.data) {
-          setEventProfile(response.data)
-        }
-      } catch (err) {
-        console.error('Error loading event profile:', err)
-      }
-    }
-
-    loadEventProfile()
-  }, [])
-
   // Cargar mensajes públicos aprobados
   useEffect(() => {
     const loadMessages = async () => {
@@ -264,9 +242,7 @@ export default function MensajesPage() {
         setLoading(true)
         setError(null)
 
-        const token = await AuthService.getValidToken()
-        if (!token) return
-
+        // Usar Supabase directamente - no requiere autenticación para leer mensajes públicos
         const response = await GuestMessageAdapter.getPublicMessages()
         
         if (response.success && response.data) {
@@ -288,11 +264,7 @@ export default function MensajesPage() {
     guest: Guest,
     messageData: Omit<GuestMessageCreate, 'guest' | 'author_name'>
   ): Promise<{ status: 'approved' | 'pending' | 'rejected' }> => {
-    const token = await AuthService.getValidToken()
-    if (!token) {
-      throw new Error('No se pudo autenticar')
-    }
-
+    // Usar Supabase directamente - no requiere autenticación para enviar mensajes
     const messageRequest: GuestMessageCreate = {
       guest: guest.id,
       author_name: guest.full_name,
@@ -365,24 +337,21 @@ export default function MensajesPage() {
           </header>
 
           {/* Formulario de envío */}
-          {eventProfile && (
-            <MessageUploadCard
-              eventProfile={eventProfile}
-              onUpload={handleUpload}
-              selectedGuest={selectedGuest}
-              setSelectedGuest={setSelectedGuest}
-              title={title}
-              setTitle={setTitle}
-              message={message}
-              setMessage={setMessage}
-              submitting={submitting}
-              setSubmitting={setSubmitting}
-              success={success}
-              setSuccess={setSuccess}
-              error={error}
-              setError={setError}
-            />
-          )}
+          <MessageUploadCard
+            onUpload={handleUpload}
+            selectedGuest={selectedGuest}
+            setSelectedGuest={setSelectedGuest}
+            title={title}
+            setTitle={setTitle}
+            message={message}
+            setMessage={setMessage}
+            submitting={submitting}
+            setSubmitting={setSubmitting}
+            success={success}
+            setSuccess={setSuccess}
+            error={error}
+            setError={setError}
+          />
 
           {/* Lista de mensajes */}
           <section className="flex flex-col gap-4">

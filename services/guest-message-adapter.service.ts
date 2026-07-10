@@ -5,88 +5,29 @@ import type { GuestMessage, GuestMessageCreate, PublicGuestMessage } from '@/typ
 import type { ApiResponse } from '@/lib/api'
 
 /**
- * Configuración del sistema
- */
-const USE_BACKEND_API = process.env.NEXT_PUBLIC_USE_BACKEND_API === 'true'
-const USE_SUPABASE = process.env.NEXT_PUBLIC_USE_SUPABASE === 'true'
-
-/**
- * Servicio adaptador que elige dinámicamente entre Backend API y Supabase
- * para la gestión de mensajes de invitados según la configuración de variables de entorno
+ * Servicio adaptador que usa Supabase directamente
  */
 export class GuestMessageAdapter {
   /**
-   * Determina qué servicio usar basado en la configuración
+   * Siempre usa Supabase
    */
   private static getService() {
-    if (USE_BACKEND_API) {
-      console.log('🔧 GuestMessageAdapter: Usando Backend API')
-      return 'api'
-    } else if (USE_SUPABASE) {
-      console.log('🔧 GuestMessageAdapter: Usando Supabase')
-      return 'supabase'
-    } else {
-      // Por defecto usar Backend API
-      console.log('🔧 GuestMessageAdapter: Usando Backend API (default)')
-      return 'api'
-    }
+    console.log('🔧 GuestMessageAdapter: Usando Supabase (forzado)')
+    return 'supabase'
   }
 
   /**
    * Crear mensaje de invitado usando el servicio configurado
    */
   static async createGuestMessage(guestMessage: GuestMessageCreate): Promise<ApiResponse<GuestMessage>> {
-    const service = this.getService()
-    
     try {
       console.log('📤 GuestMessageAdapter: Creando mensaje de invitado')
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await GuestMessageService.createGuestMessage(guestMessage)
-        
-        if (result.success) {
-          console.log('✅ GuestMessageAdapter: Mensaje creado via API')
-        } else {
-          console.error('❌ GuestMessageAdapter: Error creando mensaje via API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 GuestMessageAdapter: Intentando fallback a Supabase')
-            try {
-              const fallbackResult = await this.createGuestMessageInSupabase(guestMessage)
-              if (fallbackResult.success) {
-                console.log('✅ GuestMessageAdapter: Fallback a Supabase exitoso')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ GuestMessageAdapter: Fallback a Supabase falló:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.createGuestMessageInSupabase(guestMessage)
-      }
+      // Usar Supabase directamente
+      return await this.createGuestMessageInSupabase(guestMessage)
       
     } catch (error) {
       console.error('🚨 GuestMessageAdapter: Error crítico en createGuestMessage:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 GuestMessageAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.createGuestMessageInSupabase(guestMessage)
-          if (fallbackResult.success) {
-            console.log('✅ GuestMessageAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ GuestMessageAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
