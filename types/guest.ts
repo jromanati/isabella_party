@@ -7,6 +7,8 @@ export interface Guest {
   plus_one?: boolean
   plus_one_name?: string
   table_number?: number | null
+  table?: number | null // Alias para compatibilidad con virtual-salon
+  nickname?: string // Para virtual-salon
   notes?: string
 }
 

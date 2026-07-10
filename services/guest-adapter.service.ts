@@ -62,6 +62,8 @@ export class GuestAdapter {
         plus_one: false, // Campo no existe en Supabase, valor por defecto
         plus_one_name: '', // Campo no existe en Supabase, valor por defecto
         table_number: item.table_number || null,
+        table: item.table_number || null, // Alias para compatibilidad con virtual-salon
+        nickname: item.full_name.split(' ')[0] || '', // Usar primer nombre como nickname
         notes: '' // Campo no existe en Supabase, valor por defecto
       }))
 

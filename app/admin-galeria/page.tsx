@@ -619,13 +619,9 @@ export default function AdminGaleriaPage() {
         setGuestsLoading(true)
         setGuestsError(null)
 
-        // Asegurar autenticación antes de cargar invitados
-        const token = await AuthService.getValidToken()
-        if (!token) {
-          throw new Error('No se pudo autenticar con la API')
-        }
-
-        const response = await GuestService.getGuests()
+        // Cargar invitados usando GuestAdapter (Supabase directo)
+        const { GuestAdapter } = await import('@/services/guest-adapter.service')
+        const response = await GuestAdapter.getGuests()
 
         if (!response.success || !response.data) {
           throw new Error(response.error || 'Error al cargar invitados')
