@@ -1,0 +1,24 @@
+export interface Guest {
+  id: number
+  full_name: string
+  email?: string
+  phone?: string
+  rsvp_status?: 'pending' | 'confirmed' | 'declined'
+  plus_one?: boolean
+  plus_one_name?: string
+  table_number?: number | null
+  notes?: string
+}
+
+export interface RsvpRequest {
+  status: 'confirmed' | 'declined'
+  plus_one?: boolean
+  plus_one_name?: string
+  notes?: string
+}
+
+export interface RsvpResponse {
+  id: number
+  status: string
+  message: string
+}

@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Search, MapPin, CheckCircle, ChevronRight, Check } from 'lucide-react'
-import { getSupabaseClient } from '@/lib/supabase/client'
+import { GuestService } from '@/services/guest.service'
+import { AuthService } from '@/services/auth.service'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Positions are % of the scene container.
@@ -23,17 +24,21 @@ const TABLE_LAYOUT = [
 ]
 
 type GuestRow = {
-  id: string
+  id: number
   full_name: string
-  normalized_name: string
-  table_number: number | null
+  nickname?: string
+  guest_type: string
   rsvp_status: string
+  invitation_code: string
+  guest_group: number
+  table: number
+  created_at: string
 }
 
 type TableGuest = {
-  id: string
+  id: number
   name: string
-  normalizedName: string
+  nickname?: string
   status: 'pending' | 'confirmed'
 }
 
@@ -51,16 +56,16 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
   const [selectedTable, setSelectedTable] = useState<number | null>(null)
   const [highlightedTable, setHighlightedTable] = useState<number | null>(null)
   const [searchResult, setSearchResult] = useState<{ tableId: number; guestName: string } | null>(null)
-  const [searchGuestId, setSearchGuestId] = useState<string | null>(null)
+  const [searchGuestId, setSearchGuestId] = useState<number | null>(null)
   const [searchFocused, setSearchFocused] = useState(false)
   const [tables, setTables] = useState<TableData[]>(() => TABLE_LAYOUT.map((t) => ({ ...t, guests: [] })))
   const [tablesLoading, setTablesLoading] = useState(true)
   const [tablesError, setTablesError] = useState<string | null>(null)
-  const [confirmingGuestId, setConfirmingGuestId] = useState<string | null>(null)
+  const [confirmingGuestId, setConfirmingGuestId] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const mobileScrollRef = useRef<HTMLDivElement>(null)
   const mobileTableRefs = useRef<Record<number, HTMLButtonElement | null>>({})
-  const guestItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const guestItemRefs = useRef<Record<number, HTMLDivElement | null>>({})
   const prevSelectedTable = useRef<number | null>(null)
 
   useEffect(() => {
@@ -76,29 +81,32 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
         setTablesLoading(true)
         setTablesError(null)
 
-        const supabase = getSupabaseClient()
-        const { data, error } = await supabase
-          .from('guests')
-          .select('id, full_name, normalized_name, table_number, rsvp_status')
-          .order('table_number', { ascending: true })
-          .order('full_name', { ascending: true })
+        // Asegurar autenticación antes de cargar invitados
+        const token = await AuthService.getValidToken()
+        if (!token) {
+          throw new Error('No se pudo autenticar con la API')
+        }
 
-        if (error) throw error
+        const response = await GuestService.getGuests()
+
+        if (!response.success || !response.data) {
+          throw new Error(response.error || 'Error al cargar invitados')
+        }
         if (cancelled) return
 
         const byTable = new Map<number, TableGuest[]>()
-        for (const row of (data ?? []) as GuestRow[]) {
-          if (!row.table_number) continue
-          const status = row.rsvp_status === 'confirmed' ? 'confirmed' : 'pending'
-          const guest: TableGuest = {
-            id: row.id,
-            name: row.full_name,
-            normalizedName: row.normalized_name,
+        for (const guest of response.data) {
+          if (!guest.table) continue
+          const status = guest.rsvp_status === 'confirmed' ? 'confirmed' : 'pending'
+          const tableGuest: TableGuest = {
+            id: guest.id,
+            name: guest.full_name,
+            nickname: guest.nickname,
             status,
           }
-          const arr = byTable.get(row.table_number) ?? []
-          arr.push(guest)
-          byTable.set(row.table_number, arr)
+          const arr = byTable.get(guest.table) ?? []
+          arr.push(tableGuest)
+          byTable.set(guest.table, arr)
         }
 
         setTables(TABLE_LAYOUT.map((t) => ({ ...t, guests: byTable.get(t.id) ?? [] })))
@@ -160,7 +168,10 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
     }
     const lower = q.toLowerCase()
     for (const table of tables) {
-      const guest = table.guests.find((g) => g.name.toLowerCase().includes(lower) || g.normalizedName.toLowerCase().includes(lower))
+      const guest = table.guests.find((g) => 
+        g.name.toLowerCase().includes(lower) || 
+        (g.nickname && g.nickname.toLowerCase().includes(lower))
+      )
       if (guest) {
         setSearchResult({ tableId: table.id, guestName: guest.name })
         setSearchGuestId(guest.id)
@@ -174,7 +185,7 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
     setHighlightedTable(null)
   }
 
-  const handleConfirm = async (guestId: string) => {
+  const handleConfirm = async (guestId: number) => {
     if (confirmingGuestId) return
     setConfirmingGuestId(guestId)
     setTablesError(null)
@@ -185,16 +196,15 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
         ? (tables.find((t) => t.guests.some((g) => g.id === guestId))?.id ?? null)
         : null
 
-      const supabase = getSupabaseClient()
-      const now = new Date().toISOString()
-      const { error } = await supabase
-        .from('guests')
-        .update({ rsvp_status: 'confirmed', confirmed_at: now })
-        .eq('id', guestId)
+      const response = await GuestService.updateRsvp(guestId, {
+        rsvp_status: 'confirmed',
+      })
 
-      if (error) throw error
+      if (!response.success) {
+        throw new Error(response.error || 'Error al confirmar asistencia')
+      }
 
-      if (guestToConfirm) {
+      if (guestToConfirm && tableForGuest) {
         fetch('/api/rsvp-confirmed', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

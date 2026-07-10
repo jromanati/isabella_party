@@ -6,6 +6,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Camera, Lock, Sparkles, ArrowRight } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { AuthService } from '@/services/auth.service'
+import { EventService } from '@/services/event.service'
+import type { EventProfile } from '@/types/event'
 
 const PLACEHOLDERS = [
   { col: '#ec4899', rotate: -3 },
@@ -17,37 +20,54 @@ const PLACEHOLDERS = [
 ]
 
 export default function PhotoUpload() {
-  const [uploadsEnabled, setUploadsEnabled] = useState<boolean | null>(null)
+  const [eventProfile, setEventProfile] = useState<EventProfile | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
 
-    const loadSettings = async () => {
+    const loadEventProfile = async () => {
       try {
-        const supabase = getSupabaseClient()
-        const { data, error } = await supabase
-          .from('gallery_settings')
-          .select('uploads_enabled')
-          .eq('id', 1)
-          .single()
+        setLoading(true)
+        
+        // Asegurar autenticación antes de cargar el perfil del evento
+        const token = await AuthService.getValidToken()
+        if (!token) {
+          throw new Error('No se pudo autenticar con la API')
+        }
 
-        if (error) throw error
-        if (!cancelled) setUploadsEnabled(Boolean(data.uploads_enabled))
-      } catch {
-        if (!cancelled) setUploadsEnabled(false)
+        const response = await EventService.getEventProfile()
+        
+        if (!response.success || !response.data) {
+          throw new Error(response.error || 'Error al cargar el perfil del evento')
+        }
+        
+        if (!cancelled) {
+          setEventProfile(response.data)
+        }
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e)
+        console.error('Error cargando perfil del evento:', message)
+        if (!cancelled) {
+          setEventProfile(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
     }
 
-    loadSettings()
+    loadEventProfile()
 
     return () => {
       cancelled = true
     }
   }, [])
 
-  const shouldShowPlaceholder = uploadsEnabled !== true
-  const shouldShowGalleryLink = uploadsEnabled === true
-  const isEnabled = uploadsEnabled === true
+  const shouldShowPlaceholder = loading || !eventProfile?.gallery_enabled
+  const shouldShowGalleryLink = eventProfile?.gallery_enabled === true
+  const isEnabled = eventProfile?.gallery_enabled === true
 
   return (
     <section className="relative px-5 py-20 pb-28 overflow-hidden">

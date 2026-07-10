@@ -3,15 +3,32 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, X, Eye, Lock, Unlock, Clock, LayoutGrid, Image as ImageIcon, Trash2 } from 'lucide-react'
+import { Check, X, Eye, Lock, Unlock, Clock, LayoutGrid, Image as ImageIcon, Trash2, MessageSquare } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { GalleryAdapter } from '@/services/gallery-adapter.service'
+import { AuthService } from '@/services/auth.service'
+import { GuestService } from '@/services/guest.service'
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { useAutoMarkAsReviewed } from '@/hooks/useAutoMarkAsReviewed'
 import {
   formatUploadDate,
-  type GalleryPhoto,
+  type GalleryPhoto as AdminGalleryPhoto,
   type PhotoStatus,
 } from '@/lib/gallery-store'
+import type { GalleryPhoto } from '@/types/gallery-photo'
+
+// ── Mapeo entre tipos GalleryPhoto ─────────────────────────────
+function mapToAdminGalleryPhoto(photo: GalleryPhoto): AdminGalleryPhoto {
+  return {
+    id: photo.id.toString(),
+    guestName: photo.uploaded_by_name || 'Invitado',
+    url: photo.cloudinary_secure_url || '',
+    thumbnailUrl: photo.thumbnail_url || photo.cloudinary_secure_url || '',
+    status: photo.status as PhotoStatus,
+    uploadedAt: photo.uploaded_at
+  }
+}
 
 // ── Neon ambience (same pattern as /fotos) ────────────────────
 function NeonAmbience() {
@@ -464,17 +481,20 @@ function StatsRow({
 type Tab = 'pending' | 'approved' | 'rejected'
 
 export default function AdminGaleriaPage() {
-  const [photos, setPhotos] = useState<GalleryPhoto[]>([])
+  // Auto-marcar fotos como revisadas cuando se entra a esta página
+  useAutoMarkAsReviewed()
+
+  const [photos, setPhotos] = useState<AdminGalleryPhoto[]>([])
   const [photosLoading, setPhotosLoading] = useState(true)
   const [photosError, setPhotosError] = useState<string | null>(null)
   const [savingPhotoId, setSavingPhotoId] = useState<string | null>(null)
 
   const [guests, setGuests] = useState<{
-    id: string
+    id: number
     full_name: string
-    table_number: number | null
+    table: number | null
     rsvp_status: string
-    confirmed_at: string | null
+    created_at: string
   }[]>([])
   const [guestsLoading, setGuestsLoading] = useState(true)
   const [guestsError, setGuestsError] = useState<string | null>(null)
@@ -528,27 +548,17 @@ export default function AdminGaleriaPage() {
         setPhotosLoading(true)
         setPhotosError(null)
 
-        const supabase = getSupabaseClient()
-        const { data, error } = await supabase
-          .from('photos')
-          .select('id, guest_name, image_url, public_id, status, created_at')
-          .order('created_at', { ascending: false })
-
-        if (error) throw error
+        const response = await GalleryAdapter.getPhotos()
+        
+        if (!response.success || !response.data) {
+          throw new Error(response.error || 'Error al cargar fotos')
+        }
+        
         if (cancelled) return
 
-        setPhotos(
-          (data ?? []).map((r) =>
-            toGalleryPhoto({
-              id: r.id,
-              guest_name: r.guest_name,
-              image_url: r.image_url,
-              public_id: r.public_id,
-              status: r.status,
-              created_at: r.created_at,
-            })
-          )
-        )
+        // Mapear al tipo que espera la página admin-galeria
+        const mappedPhotos = response.data.map(mapToAdminGalleryPhoto)
+        setPhotos(mappedPhotos)
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e)
         if (!cancelled) setPhotosError(message)
@@ -609,17 +619,29 @@ export default function AdminGaleriaPage() {
         setGuestsLoading(true)
         setGuestsError(null)
 
-        const supabase = getSupabaseClient()
-        const { data, error } = await supabase
-          .from('guests')
-          .select('id, full_name, table_number, rsvp_status, confirmed_at')
-          .order('table_number', { ascending: true })
-          .order('full_name', { ascending: true })
+        // Asegurar autenticación antes de cargar invitados
+        const token = await AuthService.getValidToken()
+        if (!token) {
+          throw new Error('No se pudo autenticar con la API')
+        }
 
-        if (error) throw error
+        const response = await GuestService.getGuests()
+
+        if (!response.success || !response.data) {
+          throw new Error(response.error || 'Error al cargar invitados')
+        }
         if (cancelled) return
 
-        setGuests(data ?? [])
+        // Mapear al formato esperado por el componente
+        const mappedGuests = response.data.map(guest => ({
+          id: guest.id,
+          full_name: guest.full_name,
+          table: guest.table,
+          rsvp_status: guest.rsvp_status,
+          created_at: guest.created_at,
+        }))
+
+        setGuests(mappedGuests)
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e)
         if (!cancelled) setGuestsError(message)
@@ -676,9 +698,11 @@ export default function AdminGaleriaPage() {
     setPhotos((p) => p.map((x) => (x.id === id ? { ...x, status } : x)))
 
     try {
-      const supabase = getSupabaseClient()
-      const { error } = await supabase.from('photos').update({ status }).eq('id', id)
-      if (error) throw error
+      const response = await GalleryAdapter.updatePhotoStatus(id, status)
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Error actualizando status de foto')
+      }
     } catch (e) {
       setPhotos(prev)
       const message = e instanceof Error ? e.message : String(e)
@@ -688,7 +712,7 @@ export default function AdminGaleriaPage() {
     }
   }
 
-  const tabPhotos: Record<Tab, GalleryPhoto[]> = {
+  const tabPhotos: Record<Tab, AdminGalleryPhoto[]> = {
     pending,
     approved,
     rejected,
@@ -784,19 +808,35 @@ export default function AdminGaleriaPage() {
           >
             Panel de control
           </p>
-          <h1
-            className="font-sans font-black italic"
-            style={{
-              fontSize: 'clamp(2rem, 10vw, 3.5rem)',
-              background: 'linear-gradient(135deg, #ffffff 0%, #f9a8d4 40%, #c084fc 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              filter: 'drop-shadow(0 0 20px rgba(192,132,252,0.3))',
-            }}
-          >
-            Galería
-          </h1>
+          <div className="flex items-center gap-6">
+            <h1
+              className="font-sans font-black italic"
+              style={{
+                fontSize: 'clamp(2rem, 10vw, 3.5rem)',
+                background: 'linear-gradient(135deg, #ffffff 0%, #f9a8d4 40%, #c084fc 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 0 20px rgba(192,132,252,0.3))',
+              }}
+            >
+              Galería
+            </h1>
+            
+            <div className="flex items-center gap-3">
+              <Link
+                href="/admin-mensajes"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all"
+                style={{
+                  background: 'rgba(168,85,247,0.1)',
+                  backdropFilter: 'blur(10px)',
+                }}
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="text-sm font-medium">Mensajes</span>
+              </Link>
+            </div>
+          </div>
         </motion.div>
 
         {/* ── Gallery Controls ── */}
@@ -1102,8 +1142,8 @@ export default function AdminGaleriaPage() {
                               {g.full_name}
                             </p>
                             <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-body)' }}>
-                              Mesa {g.table_number ? String(g.table_number).padStart(2, '0') : '—'}
-                              {isConfirmed && g.confirmed_at ? ` · ${formatUploadDate(g.confirmed_at)}` : ''}
+                              Mesa {g.table ? String(g.table).padStart(2, '0') : '—'}
+                              {isConfirmed && g.created_at ? ` · ${formatUploadDate(g.created_at)}` : ''}
                             </p>
                           </div>
 

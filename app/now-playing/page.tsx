@@ -2,12 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
-import type { SongRequest } from '@/lib/playlist-types'
-
-type SongRequestsApiResponse = {
-  songRequests: SongRequest[]
-  nowPlaying: SongRequest | null
-}
+import type { SongRequest } from '@/types/song-request'
+import { SongRequestAdapter } from '@/services/song-request-adapter.service'
+import { AuthService } from '@/services/auth.service'
 
 function Visualizer() {
   const bars = useMemo(() => Array.from({ length: 24 }, (_, i) => i), [])
@@ -45,13 +42,21 @@ export default function NowPlayingPage() {
   const [nowPlaying, setNowPlaying] = useState<SongRequest | null>(null)
 
   async function refresh() {
-    const res = await fetch('/api/song-requests', { cache: 'no-store' })
-    if (!res.ok) return
-    const data: unknown = await res.json().catch(() => null)
-    if (!data || typeof data !== 'object') return
+    try {
+      // Autenticación
+      const token = await AuthService.getValidToken()
+      if (!token) return
 
-    const obj = data as Partial<SongRequestsApiResponse>
-    setNowPlaying(obj.nowPlaying ?? null)
+      // Obtener canción actual
+      const response = await SongRequestAdapter.getNowPlaying()
+      
+      if (response.success) {
+        setNowPlaying(response.data || null)
+      }
+    } catch (error) {
+      // Silencioso para pantalla de proyección
+      console.error('Error fetching now playing:', error)
+    }
   }
 
   useEffect(() => {
@@ -154,15 +159,15 @@ export default function NowPlayingPage() {
                     filter: 'drop-shadow(0 0 30px rgba(192,132,252,0.5))',
                   }}
                 >
-                  {nowPlaying.song_title ?? nowPlaying.raw_song}
+                  {nowPlaying?.song_title || nowPlaying?.raw_song}
                 </h1>
 
                 <p className="text-xl text-white/70" style={{ fontFamily: 'var(--font-body)' }}>
-                  {nowPlaying.artist_name ?? '—'}
+                  {nowPlaying?.artist_name || '—'}
                 </p>
 
                 <p className="text-sm text-white/45" style={{ fontFamily: 'var(--font-body)' }}>
-                  Sugerida por: <span className="text-white/65">{nowPlaying.guest_name}</span>
+                  Sugerida por: <span className="text-white/65">{nowPlaying?.guest_name || 'Anónimo'}</span>
                 </p>
 
                 <Visualizer />

@@ -1,11 +1,52 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { SmartNotificationToast } from '@/components/ui/SmartNotificationToast'
+import { NotificationBell } from '@/components/ui/NotificationBell'
+import { usePollingUpdates } from '@/hooks/usePollingUpdates'
+import { useAutoMarkAsReviewed } from '@/hooks/useAutoMarkAsReviewed'
+import { PollingService } from '@/services/polling.service'
 
 export default function AdminPage() {
+  const { 
+    isPolling, 
+    hasAnyNew, 
+    lastCheck,
+    forceCheck,
+    getDebugInfo,
+    hasNewPhotos,
+    hasNewMessages,
+    hasNewSongs,
+    photosUpdate,
+    messagesUpdate,
+    songsUpdate,
+    getNewCount,
+    markAsReviewed,
+    markAllAsReviewed
+  } = usePollingUpdates(true, 30000) // Iniciar con 30 segundos
+
+  // Auto-marcar como revisado cuando se entra a secciones
+  useAutoMarkAsReviewed()
+
+  // Obtener instancia del PollingService para debugging
+  const pollingService = PollingService.getInstance()
+
+  // Debug: Log estado del polling
+  useEffect(() => {
+    if (isPolling) {
+      console.log('🔄 Polling activo en página admin')
+    }
+  }, [isPolling])
+
+  // Debug: Obtener información de depuración
+  const handleDebug = async () => {
+    const debugInfo = await getDebugInfo()
+    console.log('🐛 Debug info:', debugInfo)
+  }
   return (
     <main className="min-h-screen px-5 py-10" style={{ background: '#050308' }}>
       <div
@@ -37,6 +78,72 @@ export default function AdminPage() {
             Accesos rápidos para el DJ / encargado.
           </p>
         </header>
+
+        {/* Sistema de notificaciones inteligente */}
+        <SmartNotificationToast />
+        
+        {/* Campana de notificaciones persistente */}
+        <NotificationBell 
+          hasAnyNew={hasAnyNew}
+          hasNewPhotos={hasNewPhotos}
+          hasNewMessages={hasNewMessages}
+          hasNewSongs={hasNewSongs}
+          photosUpdate={photosUpdate}
+          messagesUpdate={messagesUpdate}
+          songsUpdate={songsUpdate}
+          getNewCount={getNewCount}
+          markAsReviewed={markAsReviewed}
+          markAllAsReviewed={markAllAsReviewed}
+        />
+
+        {/* Indicador de estado del sistema */}
+        <div className="flex items-center justify-between text-xs text-white/40">
+          <div className="flex items-center gap-4">
+            <span className={`flex items-center gap-1 ${isPolling ? 'text-green-400/60' : 'text-red-400/60'}`}>
+              <div className={`w-2 h-2 rounded-full ${isPolling ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+              Sistema {isPolling ? 'activo' : 'inactivo'}
+            </span>
+            {lastCheck && (
+              <span>
+                Última verificación: {new Date(lastCheck).toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={forceCheck}
+              className="text-white/40 hover:text-white/60 transition-colors"
+              title="Forzar verificación"
+            >
+              🔄 Verificar ahora
+            </button>
+            
+            <button
+              onClick={handleDebug}
+              className="text-white/40 hover:text-white/60 transition-colors"
+              title="Debug info (consola)"
+            >
+              🐛 Debug
+            </button>
+            
+            <button
+              onClick={() => pollingService.forceNotification('messages')}
+              className="text-white/40 hover:text-white/60 transition-colors"
+              title="Forzar notificación de mensaje"
+            >
+              💬 Forzar msg
+            </button>
+            
+            <button
+              onClick={() => console.log('Estado completo:', pollingService.getDebugState())}
+              className="text-white/40 hover:text-white/60 transition-colors"
+              title="Ver estado completo (consola)"
+            >
+              📊 Estado
+            </button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 gap-4">
           <Card className="border-white/10 bg-black/35">
@@ -80,6 +187,21 @@ export default function AdminPage() {
                 className="w-full bg-blue-500/15 hover:bg-blue-500/20 text-white border border-blue-400/25"
               >
                 <Link href="/now-playing">Abrir /now-playing</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-white/10 bg-black/35">
+            <CardHeader>
+              <CardTitle className="text-white/90">Slideshow de Mensajes</CardTitle>
+              <CardDescription className="text-white/55">Mostrar mensajes de invitados en pantalla.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                asChild
+                className="w-full bg-green-500/15 hover:bg-green-500/20 text-white border border-green-400/25"
+              >
+                <Link href="/messages-slideshow">Abrir /messages-slideshow</Link>
               </Button>
             </CardContent>
           </Card>

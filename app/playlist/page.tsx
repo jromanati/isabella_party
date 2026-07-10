@@ -6,21 +6,19 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { Separator } from '@/components/ui/separator'
 
-import type { ITunesSongResult, SongRequest } from '@/lib/playlist-types'
-
-type SongRequestsApiResponse = {
-  songRequests: SongRequest[]
-  nowPlaying: SongRequest | null
-}
-
-type SearchApiResponse = {
-  results: ITunesSongResult[]
-}
+import type { ITunesSongResult } from '@/lib/playlist-types'
+import type { SongRequest, SongRequestCreate, PublicSongRequest } from '@/types/song-request'
+import { SongRequestAdapter } from '@/services/song-request-adapter.service'
+import { AuthService } from '@/services/auth.service'
+import type { Guest } from '@/types/guest'
+import GuestSelector from '@/components/guest-selector'
 
 export default function PlaylistPage() {
-  const [guestName, setGuestName] = useState('')
+  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null)
   const [rawSong, setRawSong] = useState('')
 
   const [searchLoading, setSearchLoading] = useState(false)
@@ -30,18 +28,29 @@ export default function PlaylistPage() {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<string | null>(null)
 
-  const [songRequests, setSongRequests] = useState<SongRequest[]>([])
+  const [songRequests, setSongRequests] = useState<PublicSongRequest[]>([])
   const [nowPlaying, setNowPlaying] = useState<SongRequest | null>(null)
 
   async function refreshList() {
-    const res = await fetch('/api/song-requests', { cache: 'no-store' })
-    if (!res.ok) return
-    const data: unknown = await res.json().catch(() => null)
-    if (!data || typeof data !== 'object') return
-    const obj = data as Partial<SongRequestsApiResponse>
-    if (!Array.isArray(obj.songRequests)) return
-    setSongRequests(obj.songRequests)
-    setNowPlaying(obj.nowPlaying ?? null)
+    try {
+      // Autenticación para obtener datos completos
+      const token = await AuthService.getValidToken()
+      if (!token) return
+
+      // Obtener playlist pública
+      const playlistResponse = await SongRequestAdapter.getPublicPlaylist()
+      if (playlistResponse.success && playlistResponse.data) {
+        setSongRequests(playlistResponse.data)
+      }
+
+      // Obtener ahora sonando
+      const nowPlayingResponse = await SongRequestAdapter.getNowPlaying()
+      if (nowPlayingResponse.success) {
+        setNowPlaying(nowPlayingResponse.data || null)
+      }
+    } catch (error) {
+      console.error('Error refreshing playlist:', error)
+    }
   }
 
   useEffect(() => {
@@ -81,7 +90,7 @@ export default function PlaylistPage() {
         return
       }
 
-      const obj = data as Partial<SearchApiResponse>
+      const obj = data as { results: ITunesSongResult[] }
       setResults(Array.isArray(obj.results) ? obj.results : [])
 
       if (!Array.isArray(obj.results) || obj.results.length === 0) {
@@ -96,14 +105,12 @@ export default function PlaylistPage() {
     setSearchError(null)
     setSubmitMessage(null)
 
-    const name = guestName.trim()
-    const raw = rawSong.trim()
-
-    if (!name) {
-      setSearchError('Escribe tu nombre.')
+    if (!selectedGuest) {
+      setSearchError('Selecciona tu nombre de la lista.')
       return
     }
 
+    const raw = rawSong.trim()
     if (!raw) {
       setSearchError('Escribe una canción o artista.')
       return
@@ -116,34 +123,46 @@ export default function PlaylistPage() {
 
     setSubmitLoading(true)
     try {
-      const res = await fetch('/api/request-song', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          guestName: name,
-          rawSong: raw,
-          selectedTrack: selectedTrack ?? undefined,
-        }),
-      })
+      // Autenticación
+      const token = await AuthService.getValidToken()
+      if (!token) throw new Error('No se pudo autenticar')
 
-      const data: unknown = await res.json().catch(() => null)
-      if (!res.ok) {
-        const msg = data && typeof data === 'object' && typeof (data as Record<string, unknown>).error === 'string'
-          ? String((data as Record<string, unknown>).error)
-          : 'No se pudo enviar tu sugerencia.'
-        setSearchError(msg)
-        return
+      // Mapear iTunes → SongRequestCreate
+      const songRequest: SongRequestCreate = {
+        guest: selectedGuest.id,
+        guest_name: selectedGuest.full_name,
+        raw_song: raw,
+        song_title: selectedTrack.title,
+        artist_name: selectedTrack.artist,
+        album_name: '',
+        album_image_url: selectedTrack.albumImageUrl || '',
+        preview_url: selectedTrack.previewUrl || '',
+        external_url: '',
+        provider: 'manual' as const,
+        provider_track_id: '',
+        source: 'guest' as const,
+        notes: ''
       }
 
-      setSubmitMessage('Tu canción fue sugerida al DJ.')
-      setResults([])
-      await refreshList()
+      const response = await SongRequestAdapter.createSongRequest(songRequest)
+      
+      if (response.success) {
+        setSubmitMessage('Tu canción fue sugerida al DJ.')
+        setResults([])
+        setSelectedGuest(null)
+        setRawSong('')
+        await refreshList()
+      } else {
+        setSearchError(response.error || 'No se pudo enviar tu sugerencia.')
+      }
+    } catch (error) {
+      setSearchError('Error al enviar la sugerencia.')
     } finally {
       setSubmitLoading(false)
     }
   }
 
-  function SongCard({ song }: { song: SongRequest }) {
+  function SongCard({ song }: { song: PublicSongRequest | SongRequest }) {
     return (
       <Card
         className="border-white/10 bg-black/30"
@@ -202,7 +221,7 @@ export default function PlaylistPage() {
 
       <div className="relative max-w-3xl mx-auto flex flex-col gap-8">
         <header className="text-center">
-          <p className="text-xs font-semibold tracking-[0.35em] uppercase neon-purple">Playlist colaborativa</p>
+                    <p className="text-xs font-semibold tracking-[0.35em] uppercase neon-purple">Playlist colaborativa</p>
           <h1
             className="mt-3 font-sans font-black italic leading-tight"
             style={{
@@ -230,10 +249,10 @@ export default function PlaylistPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
                 <p className="text-xs text-white/60">Tu nombre</p>
-                <Input
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  placeholder="Ej: José"
+                <GuestSelector
+                  value={selectedGuest?.id?.toString() || ''}
+                  onChange={setSelectedGuest}
+                  disabled={submitLoading}
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -381,14 +400,30 @@ export default function PlaylistPage() {
                 ))}
               </div>
             )}
-          </div>
-
-          {!nowPlaying && (
-            <p className="text-xs text-white/30">
-              Tip: También puedes abrir <span className="text-white/50">/now-playing</span> para proyección.
-            </p>
-          )}
+          </div>          
         </section>
+
+        {/* ── Footer nav ── */}
+        <div className="flex justify-center pb-4">
+          <Link href="/guest">
+            <motion.span
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide transition-all duration-300"
+              style={{
+                background: 'rgba(168,85,247,0.08)',
+                border: '1px solid rgba(168,85,247,0.4)',
+                color: '#c084fc',
+                fontFamily: 'var(--font-body)',
+                boxShadow: '0 0 18px rgba(168,85,247,0.2), inset 0 0 18px rgba(168,85,247,0.04)',
+                cursor: 'pointer',
+                textShadow: '0 0 12px rgba(192,132,252,0.6)',
+              }}
+            >
+              ← Volver al menú
+            </motion.span>
+          </Link>
+        </div>
       </div>
     </main>
   )

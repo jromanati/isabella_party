@@ -7,20 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 
-import type { SongRequest } from '@/lib/playlist-types'
-
-type SongRequestsApiResponse = {
-  songRequests: SongRequest[]
-  nowPlaying: SongRequest | null
-}
-
-type DjActionResponse = {
-  songRequest?: SongRequest
-  nowPlaying?: SongRequest
-  error?: string
-}
+import type { SongRequest, SongRequestReject } from '@/types/song-request'
+import { SongRequestAdapter } from '@/services/song-request-adapter.service'
+import { AuthService } from '@/services/auth.service'
+import { useAutoMarkAsReviewed } from '@/hooks/useAutoMarkAsReviewed'
 
 export default function DjPage() {
+  // Auto-marcar canciones como revisadas cuando se entra a esta página
+  useAutoMarkAsReviewed()
   const [songRequests, setSongRequests] = useState<SongRequest[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,24 +22,25 @@ export default function DjPage() {
 
   async function refresh() {
     setError(null)
-    const res = await fetch('/api/song-requests', { cache: 'no-store' })
-    if (!res.ok) {
-      setError('No se pudo cargar la lista.')
-      return
-    }
-    const data: unknown = await res.json().catch(() => null)
-    if (!data || typeof data !== 'object') {
-      setError('Respuesta inválida del servidor.')
-      return
-    }
+    try {
+      // Autenticación
+      const token = await AuthService.getValidToken()
+      if (!token) {
+        setError('No se pudo autenticar.')
+        return
+      }
 
-    const obj = data as Partial<SongRequestsApiResponse>
-    if (!Array.isArray(obj.songRequests)) {
-      setError('Respuesta inválida del servidor.')
-      return
+      // Obtener todas las solicitudes (sin filtros para DJ)
+      const response = await SongRequestAdapter.getSongRequests()
+      
+      if (response.success && response.data) {
+        setSongRequests(response.data)
+      } else {
+        setError(response.error || 'No se pudo cargar la lista.')
+      }
+    } catch (error) {
+      setError('Error al cargar la lista.')
     }
-
-    setSongRequests(obj.songRequests)
   }
 
   useEffect(() => {
@@ -61,40 +56,76 @@ export default function DjPage() {
   const played = useMemo(() => songRequests.filter((s) => s.status === 'played'), [songRequests])
   const rejected = useMemo(() => songRequests.filter((s) => s.status === 'rejected'), [songRequests])
 
-  async function postAction(path: string, payload: Record<string, unknown>) {
+  async function markAsPlaying(songId: number) {
     setError(null)
     setLoading(true)
     try {
-      const res = await fetch(path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+      const token = await AuthService.getValidToken()
+      if (!token) throw new Error('No autenticado')
 
-      const data: unknown = await res.json().catch(() => null)
-      if (!res.ok) {
-        const msg = data && typeof data === 'object' && typeof (data as Record<string, unknown>).error === 'string'
-          ? String((data as Record<string, unknown>).error)
-          : 'No se pudo ejecutar la acción.'
-        setError(msg)
-        return
+      const response = await SongRequestAdapter.markAsPlaying(songId)
+      
+      if (response.success) {
+        await refresh()
+      } else {
+        setError(response.error || 'No se pudo marcar como sonando.')
+      }
+    } catch (error) {
+      setError('Error al marcar como sonando.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function markAsPlayed(songId: number) {
+    setError(null)
+    setLoading(true)
+    try {
+      const token = await AuthService.getValidToken()
+      if (!token) throw new Error('No autenticado')
+
+      const response = await SongRequestAdapter.markAsPlayed(songId)
+      
+      if (response.success) {
+        await refresh()
+      } else {
+        setError(response.error || 'No se pudo marcar como reproducida.')
+      }
+    } catch (error) {
+      setError('Error al marcar como reproducida.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function rejectSong(songId: number, reason?: string) {
+    setError(null)
+    setLoading(true)
+    try {
+      const token = await AuthService.getValidToken()
+      if (!token) throw new Error('No autenticado')
+
+      const rejectData: SongRequestReject = { 
+        reason: reason || 'Rechazada por el DJ' 
       }
 
-      const obj = (data ?? null) as DjActionResponse
-      if (obj && typeof obj.error === 'string') {
-        setError(obj.error)
-        return
+      const response = await SongRequestAdapter.rejectSongRequest(songId, rejectData)
+      
+      if (response.success) {
+        await refresh()
+      } else {
+        setError(response.error || 'No se pudo rechazar la canción.')
       }
-
-      await refresh()
+    } catch (error) {
+      setError('Error al rechazar la canción.')
     } finally {
       setLoading(false)
     }
   }
 
   function SongRow({ song }: { song: SongRequest }) {
-    const title = song.song_title ?? song.raw_song
-    const artist = song.artist_name ?? '—'
+    const title = song.song_title || song.raw_song
+    const artist = song.artist_name || '—'
 
     return (
       <Card className="border-white/10 bg-black/35">
@@ -127,35 +158,58 @@ export default function DjPage() {
                 {song.status === 'rejected' && (
                   <Badge variant="destructive" className="border-red-400/30 bg-red-500/20 text-red-200">RECHAZADA</Badge>
                 )}
+                {song.is_featured && (
+                  <Badge className="bg-yellow-500/20 text-yellow-200 border-yellow-400/30">⭐ DESTACADA</Badge>
+                )}
               </div>
               <p className="text-sm text-white/60 truncate">{artist}</p>
               <p className="text-xs text-white/40 mt-1">
                 {song.guest_name} · {new Date(song.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
               </p>
+              {song.rejection_reason && (
+                <p className="text-xs text-red-400 mt-1">
+                  Motivo: {song.rejection_reason}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2 flex-wrap justify-end">
-              <Button
-                onClick={() => void postAction('/api/dj/mark-playing', { songRequestId: song.id })}
-                disabled={loading || song.status === 'playing' || song.status === 'rejected'}
-                className="bg-pink-500/15 hover:bg-pink-500/20 text-white border border-pink-400/25"
-              >
-                Marcar sonando
-              </Button>
-              <Button
-                onClick={() => void postAction('/api/dj/mark-played', { songRequestId: song.id })}
-                disabled={loading || song.status === 'played' || song.status === 'rejected'}
-                className="bg-blue-500/15 hover:bg-blue-500/20 text-white border border-blue-400/25"
-              >
-                Ya sonó
-              </Button>
-              <Button
-                onClick={() => void postAction('/api/dj/reject-song', { songRequestId: song.id })}
-                disabled={loading || song.status === 'rejected'}
-                variant="destructive"
-              >
-                Rechazar
-              </Button>
+              {song.status === 'pending' && (
+                <>
+                  <Button
+                    onClick={() => void markAsPlaying(song.id)}
+                    disabled={loading}
+                    className="bg-pink-500/15 hover:bg-pink-500/20 text-white border border-pink-400/25"
+                  >
+                    Marcar sonando
+                  </Button>
+                  <Button
+                    onClick={() => void markAsPlayed(song.id)}
+                    disabled={loading}
+                    className="bg-blue-500/15 hover:bg-blue-500/20 text-white border border-blue-400/25"
+                  >
+                    Ya sonó
+                  </Button>
+                </>
+              )}
+              {song.status === 'playing' && (
+                <Button
+                  onClick={() => void markAsPlayed(song.id)}
+                  disabled={loading}
+                  className="bg-blue-500/15 hover:bg-blue-500/20 text-white border border-blue-400/25"
+                >
+                  Terminar
+                </Button>
+              )}
+              {song.status !== 'rejected' && song.status !== 'played' && (
+                <Button
+                  onClick={() => void rejectSong(song.id)}
+                  disabled={loading}
+                  variant="destructive"
+                >
+                  Rechazar
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
@@ -184,6 +238,13 @@ export default function DjPage() {
               className="border-white/10 bg-white/5 hover:bg-white/10"
             >
               Actualizar
+            </Button>
+            <Button
+              onClick={() => window.location.href = '/admin'}
+              variant="outline"
+              className="border-purple-400/20 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200"
+            >
+              ← Admin
             </Button>
           </div>
           {error && <p className="text-sm" style={{ color: 'rgba(248,113,113,0.95)' }}>{error}</p>}

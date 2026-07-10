@@ -5,10 +5,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Upload, Lock, X, ZoomIn, Check, ImageIcon, Camera } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { getSupabaseClient } from '@/lib/supabase/client'
+import { AuthService } from '@/services/auth.service'
+import { EventService } from '@/services/event.service'
+import { GuestService } from '@/services/guest.service'
+import { GalleryAdapter } from '@/services/gallery-adapter.service'
+import { OpenAIService } from '@/services/openai.service'
+import type { EventProfile } from '@/types/event'
+import type { Guest } from '@/types/guest'
+import type { GalleryPhoto } from '@/types/gallery-photo'
+import GuestSelector from '@/components/guest-selector'
 import {
   formatUploadDate,
-  type GalleryPhoto,
+  type GalleryPhoto as LegacyGalleryPhoto,
 } from '@/lib/gallery-store'
 
 // ── Neon particle background ──────────────────────────────────
@@ -46,11 +54,12 @@ function UploadCard({
 }: {
   locked: boolean
   onUpload: (
-    name: string,
+    guest: Guest,
     file: File,
+    initialStatus?: 'approved' | 'pending'
   ) => Promise<{ status: 'approved' | 'pending' | 'rejected' }>
 }) {
-  const [guestName, setGuestName] = useState('')
+  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -75,15 +84,19 @@ function UploadCard({
   }, [])
 
   const handleSubmit = async () => {
-    if (!guestName.trim() || !file) return
+    if (!selectedGuest || !file) return
     setUploading(true)
     setError(null)
     try {
-      const result = await onUpload(guestName.trim(), file)
+      // Step 1: Analyze photo with OpenAI
+      const analysis = await OpenAIService.analyzePhoto(file)
+      
+      // Step 2: Upload with appropriate status based on analysis
+      const result = await onUpload(selectedGuest, file, analysis.isValid ? 'approved' : 'pending')
       setSuccess(result)
       setTimeout(() => {
         setSuccess(null)
-        setGuestName('')
+        setSelectedGuest(null)
         setPreview(null)
         setFile(null)
       }, 3000)
@@ -205,28 +218,10 @@ function UploadCard({
           >
             Tu nombre
           </label>
-          <input
-            id="guest-name"
-            type="text"
-            value={guestName}
-            onChange={(e) => setGuestName(e.target.value)}
-            placeholder="¿Cómo te llamas?"
+          <GuestSelector
+            value={selectedGuest?.id?.toString() || ''}
+            onChange={setSelectedGuest}
             disabled={uploading}
-            className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/25 outline-none transition-all duration-300"
-            style={{
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '16px', // prevents iOS zoom on focus
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.border = '1px solid rgba(168,85,247,0.5)'
-              e.currentTarget.style.boxShadow = '0 0 16px rgba(168,85,247,0.15)'
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)'
-              e.currentTarget.style.boxShadow = 'none'
-            }}
           />
         </div>
 
@@ -426,25 +421,25 @@ function UploadCard({
           ) : (
             <motion.button
               key="submit"
-              whileHover={guestName && file ? { scale: 1.02 } : {}}
-              whileTap={guestName && file ? { scale: 0.97 } : {}}
+              whileHover={selectedGuest && file ? { scale: 1.02 } : {}}
+              whileTap={selectedGuest && file ? { scale: 0.97 } : {}}
               onClick={handleSubmit}
-              disabled={!guestName.trim() || !file || uploading}
+              disabled={!selectedGuest || !file || uploading}
               className="group relative overflow-hidden w-full py-4 rounded-xl text-sm font-semibold tracking-wider transition-all duration-300"
               style={{
-                background: guestName && file
+                background: selectedGuest && file
                   ? 'linear-gradient(135deg, rgba(236,72,153,0.85), rgba(168,85,247,0.85))'
                   : 'rgba(255,255,255,0.04)',
-                border: guestName && file
+                border: selectedGuest && file
                   ? '1px solid rgba(236,72,153,0.4)'
                   : '1px solid rgba(255,255,255,0.08)',
-                color: guestName && file ? '#fff' : 'rgba(255,255,255,0.25)',
+                color: selectedGuest && file ? '#fff' : 'rgba(255,255,255,0.25)',
                 fontFamily: 'var(--font-body)',
-                boxShadow: guestName && file ? '0 0 30px rgba(236,72,153,0.2)' : 'none',
-                cursor: guestName && file ? 'pointer' : 'not-allowed',
+                boxShadow: selectedGuest && file ? '0 0 30px rgba(236,72,153,0.2)' : 'none',
+                cursor: selectedGuest && file ? 'pointer' : 'not-allowed',
               }}
             >
-              {guestName && file && (
+              {selectedGuest && file && (
                 <span
                   className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
                   style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }}
@@ -452,7 +447,7 @@ function UploadCard({
               )}
               <span className="relative flex items-center justify-center gap-2">
                 <Upload className="w-4 h-4" />
-                {uploading ? 'Analizando foto…' : 'Enviar foto'}
+                {uploading ? 'Analizando con IA…' : 'Enviar foto'}
               </span>
             </motion.button>
           )}
@@ -489,8 +484,8 @@ function PhotoModal({
         onClick={(e) => e.stopPropagation()}
       >
         <Image
-          src={photo.url}
-          alt={`Foto de ${photo.guestName}`}
+          src={photo.cloudinary_secure_url}
+          alt={`Foto de ${photo.uploaded_by_name}`}
           width={800}
           height={600}
           className="w-full object-cover"
@@ -506,13 +501,13 @@ function PhotoModal({
             <p
               className="font-sans font-bold italic text-lg text-white"
             >
-              {photo.guestName}
+              {photo.uploaded_by_name}
             </p>
             <p
               className="text-xs"
               style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-body)' }}
             >
-              {formatUploadDate(photo.uploadedAt)}
+              {formatUploadDate(photo.uploaded_at)}
             </p>
           </div>
           <button
@@ -556,8 +551,8 @@ function PhotoCard({
       }}
     >
       <Image
-        src={photo.thumbnailUrl}
-        alt={`Foto de ${photo.guestName}`}
+        src={photo.thumbnail_url}
+        alt={`Foto de ${photo.uploaded_by_name}`}
         width={400}
         height={300}
         className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -596,7 +591,7 @@ function PhotoCard({
           className="text-xs font-medium text-white/80 truncate"
           style={{ fontFamily: 'var(--font-body)' }}
         >
-          {photo.guestName}
+          {photo.uploaded_by_name}
         </p>
       </div>
       {/* Glow border hover */}
@@ -613,7 +608,7 @@ export default function FotosPage() {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([])
   const [photosLoading, setPhotosLoading] = useState(true)
   const [photosError, setPhotosError] = useState<string | null>(null)
-  const [galleryLocked, setGalleryLocked] = useState(true)
+  const [eventProfile, setEventProfile] = useState<EventProfile | null>(null)
   const [settingsLoading, setSettingsLoading] = useState(true)
   const [settingsError, setSettingsError] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -633,32 +628,24 @@ export default function FotosPage() {
         setPhotosLoading(true)
         setPhotosError(null)
 
-        const supabase = getSupabaseClient()
-        const { data, error } = await supabase
-          .from('photos')
-          .select('id, guest_name, image_url, public_id, status, created_at')
-          .order('created_at', { ascending: false })
+        // Asegurar autenticación antes de cargar fotos
+        const token = await AuthService.getValidToken()
+        if (!token) {
+          throw new Error('No se pudo autenticar con la API')
+        }
 
-        if (error) throw error
-        if (cancelled) return
-
-        const mapped: GalleryPhoto[] = (data ?? []).map((r) => {
-          const thumbnailUrl =
-            cloudName && r.public_id
-              ? `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto,w_400/${r.public_id}`
-              : r.image_url
-
-          return {
-            id: r.id,
-            guestName: r.guest_name,
-            url: r.image_url,
-            thumbnailUrl,
-            status: r.status,
-            uploadedAt: r.created_at,
-          }
-        })
-
-        setPhotos(mapped)
+        const response = await GalleryAdapter.getPhotos()
+        
+        if (!response.success || !response.data) {
+          throw new Error(response.error || 'Error al cargar fotos')
+        }
+        
+        // Limitar a 5 fotos más recientes (el backend ya ordena descendente)
+        const limitedPhotos = response.data.slice(0, 5)
+        
+        if (!cancelled) {
+          setPhotos(limitedPhotos)
+        }
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e)
         if (!cancelled) setPhotosError(message)
@@ -682,23 +669,27 @@ export default function FotosPage() {
         setSettingsLoading(true)
         setSettingsError(null)
 
-        const supabase = getSupabaseClient()
-        const { data, error } = await supabase
-          .from('gallery_settings')
-          .select('uploads_enabled')
-          .eq('id', 1)
-          .single()
+        // Asegurar autenticación antes de cargar el perfil del evento
+        const token = await AuthService.getValidToken()
+        if (!token) {
+          throw new Error('No se pudo autenticar con la API')
+        }
 
-        if (error) throw error
+        const response = await EventService.getEventProfile()
+        
+        if (!response.success || !response.data) {
+          throw new Error(response.error || 'Error al cargar el perfil del evento')
+        }
+        
         if (!cancelled) {
-          setGalleryLocked(!data.uploads_enabled)
+          setEventProfile(response.data)
         }
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e)
         if (!cancelled) {
           setSettingsError(message)
           // Fail closed: if settings cannot be loaded, keep uploads locked.
-          setGalleryLocked(true)
+          setEventProfile(null)
         }
       } finally {
         if (!cancelled) setSettingsLoading(false)
@@ -713,106 +704,44 @@ export default function FotosPage() {
   }, [])
 
   const handleUpload = async (
-    name: string,
+    guest: Guest,
     file: File,
+    initialStatus?: 'approved' | 'pending',
   ): Promise<{ status: 'approved' | 'pending' | 'rejected' }> => {
-    if (galleryLocked) {
+    if (!eventProfile?.photo_uploads_enabled) {
       throw new Error('La galería está bloqueada')
     }
     setUploadError(null)
 
-    if (!cloudName) {
-      throw new Error('Falta NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME en .env.local')
-    }
-    if (!uploadPreset) {
-      throw new Error('Falta NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET en .env.local')
-    }
-
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('upload_preset', uploadPreset)
-
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: 'POST',
-      body: formData,
-    })
-
-    const body: unknown = await res.json().catch(() => null)
-    if (!res.ok) {
-      const message =
-        body && typeof body === 'object' && 'error' in body
-          ? String((body as { error?: { message?: string } }).error?.message ?? 'Error subiendo a Cloudinary')
-          : 'Error subiendo a Cloudinary'
-      throw new Error(message)
+    // Asegurar autenticación antes de subir
+    const token = await AuthService.getValidToken()
+    if (!token) {
+      throw new Error('No se pudo autenticar con la API')
     }
 
-    if (!body || typeof body !== 'object') {
-      throw new Error('Respuesta inválida de Cloudinary')
+    // Subir foto usando GalleryService
+    const uploadRequest = {
+      file,
+      uploaded_by_guest: guest.id,
+      uploaded_by_name: guest.full_name,
+      source: 'guest_upload',
+      status: initialStatus,
     }
 
-    const { secure_url, public_id, format } = body as {
-      secure_url?: string
-      public_id?: string
-      format?: string
+    const response = await GalleryAdapter.uploadPhoto(uploadRequest)
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Error subiendo foto')
     }
 
-    if (!secure_url || !public_id) {
-      throw new Error('Cloudinary no devolvió secure_url/public_id')
+    const uploadedPhoto = response.data
+
+    // Añadir a la lista localmente
+    setPhotos(prev => [uploadedPhoto, ...prev])
+
+    return {
+      status: uploadedPhoto.status,
     }
-
-    const thumbnailUrl = `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto,w_400/${public_id}${format ? `.${format}` : ''}`
-
-    type ModerateApiResponse = {
-      photo: {
-        id: string
-        guest_name: string
-        image_url: string
-        public_id: string | null
-        status: 'pending' | 'approved' | 'rejected'
-        created_at: string
-      }
-    }
-
-    const moderateRes = await fetch('/api/moderate-photo', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        guestName: name,
-        imageUrl: secure_url,
-        publicId: public_id,
-      }),
-    })
-
-    const moderateBody: unknown = await moderateRes.json().catch(() => null)
-    if (!moderateRes.ok) {
-      const message =
-        moderateBody && typeof moderateBody === 'object' && 'error' in moderateBody
-          ? String((moderateBody as { error?: unknown }).error ?? 'Error analizando la foto')
-          : 'Error analizando la foto'
-      throw new Error(message)
-    }
-
-    if (!moderateBody || typeof moderateBody !== 'object' || !('photo' in moderateBody)) {
-      throw new Error('Respuesta inválida del servidor')
-    }
-
-    const { photo } = moderateBody as ModerateApiResponse
-    if (!photo || typeof photo !== 'object') {
-      throw new Error('Respuesta inválida del servidor')
-    }
-
-    const newPhoto: GalleryPhoto = {
-      id: photo.id,
-      guestName: photo.guest_name,
-      url: photo.image_url,
-      thumbnailUrl,
-      status: photo.status,
-      uploadedAt: photo.created_at,
-    }
-
-    setPhotos((prev) => [newPhoto, ...prev])
-
-    return { status: photo.status }
   }
 
   return (
@@ -828,7 +757,7 @@ export default function FotosPage() {
           borderBottom: '1px solid rgba(168,85,247,0.1)',
         }}
       >
-        <Link href="/">
+        <Link href="/guest">
           <span
             className="font-sans font-black italic text-lg"
             style={{
@@ -930,7 +859,7 @@ export default function FotosPage() {
           </div>
         )}
 
-        <UploadCard locked={galleryLocked} onUpload={handleUpload} />
+        <UploadCard locked={!eventProfile?.photo_uploads_enabled} onUpload={handleUpload} />
 
         {/* ── Approved Grid ── */}
         {approvedMoments.length > 0 && (
@@ -987,7 +916,7 @@ export default function FotosPage() {
 
         {/* ── Footer nav ── */}
         <div className="flex justify-center pb-4">
-          <Link href="/">
+          <Link href="/guest">
             <motion.span
               whileHover={{ scale: 1.05, y: -1 }}
               whileTap={{ scale: 0.96 }}
@@ -1002,7 +931,7 @@ export default function FotosPage() {
                 textShadow: '0 0 12px rgba(192,132,252,0.6)',
               }}
             >
-              ← Volver a la invitación
+              ← Volver al menú
             </motion.span>
           </Link>
         </div>

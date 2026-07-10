@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { getSupabaseClient } from '@/lib/supabase/client'
-import { type GalleryPhoto } from '@/lib/gallery-store'
+import { AuthService } from '@/services/auth.service'
+import { GalleryAdapter } from '@/services/gallery-adapter.service'
+import type { GalleryPhoto } from '@/types/gallery-photo'
+import { type GalleryPhoto as LegacyGalleryPhoto } from '@/lib/gallery-store'
 
 const SLIDE_DURATION = 6000 // ms per slide
 const TRANSITION_DURATION = 1.2 // seconds
@@ -201,7 +203,7 @@ function KenBurnsImage({ photo, index }: { photo: GalleryPhoto; index: number })
       transition={{ duration: SLIDE_DURATION / 1000 + TRANSITION_DURATION, ease: 'linear' }}
     >
       <Image
-        src={photo.url}
+        src={photo.cloudinary_secure_url}
         alt=""
         fill
         priority
@@ -210,8 +212,8 @@ function KenBurnsImage({ photo, index }: { photo: GalleryPhoto; index: number })
         crossOrigin="anonymous"
       />
       <Image
-        src={photo.url}
-        alt={`Recuerdo de ${photo.guestName}`}
+        src={photo.cloudinary_secure_url}
+        alt={`Recuerdo de ${photo.uploaded_by_name}`}
         fill
         priority
         sizes="100vw"
@@ -243,35 +245,24 @@ export default function SlideshowPage() {
         setPhotosLoading(true)
         setPhotosError(null)
 
-        const supabase = getSupabaseClient()
-        const { data, error } = await supabase
-          .from('photos')
-          .select('id, guest_name, image_url, public_id, status, created_at')
-          .eq('status', 'approved')
-          .order('created_at', { ascending: false })
+        // Asegurar autenticación antes de cargar fotos
+        const token = await AuthService.getValidToken()
+        if (!token) {
+          throw new Error('No se pudo autenticar con la API')
+        }
 
-        if (error) throw error
-        if (cancelled) return
-
-        const mapped: GalleryPhoto[] = (data ?? []).map((r) => {
-          const thumbnailUrl =
-            cloudName && r.public_id
-              ? `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto,w_400/${r.public_id}`
-              : r.image_url
-
-          return {
-            id: r.id,
-            guestName: r.guest_name,
-            url: r.image_url,
-            thumbnailUrl,
-            status: r.status,
-            uploadedAt: r.created_at,
-          }
-        })
-
-        setPhotos(mapped)
-        setCurrentIndex(0)
-        setProgress(0)
+        const response = await GalleryAdapter.getPhotos()
+        
+        if (!response.success || !response.data) {
+          throw new Error(response.error || 'Error al cargar fotos')
+        }
+        
+        // Filtrar solo fotos aprobadas
+        const approvedPhotos = response.data.filter((photo: GalleryPhoto) => photo.status === 'approved')
+        
+        if (!cancelled) {
+          setPhotos(approvedPhotos)
+        }
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e)
         if (!cancelled) setPhotosError(message)
@@ -285,7 +276,7 @@ export default function SlideshowPage() {
     return () => {
       cancelled = true
     }
-  }, [cloudName])
+  }, [])
 
   const advance = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % photos.length)
@@ -487,7 +478,7 @@ export default function SlideshowPage() {
                   filter: 'drop-shadow(0 0 20px rgba(192,132,252,0.4))',
                 }}
               >
-                {current.guestName}
+                {current.uploaded_by_name}
               </h2>
 
               {/* Progress bar */}
