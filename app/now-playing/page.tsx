@@ -43,10 +43,7 @@ export default function NowPlayingPage() {
 
   async function refresh() {
     try {
-      // Autenticación
-      const token = await AuthService.getValidToken()
-      if (!token) return
-
+      // Usar Supabase directamente - no requiere autenticación
       // Obtener canción actual
       const response = await SongRequestAdapter.getNowPlaying()
       
