@@ -708,9 +708,7 @@ export default function FotosPage() {
     file: File,
     initialStatus?: 'approved' | 'pending',
   ): Promise<{ status: 'approved' | 'pending' | 'rejected' }> => {
-    if (!eventProfile?.photo_uploads_enabled) {
-      throw new Error('La galería está bloqueada')
-    }
+    // Eliminada verificación de eventProfile - las subidas siempre están habilitadas con Supabase
     setUploadError(null)
 
     // Usar Supabase directamente - no requiere autenticación para subir fotos
@@ -854,7 +852,7 @@ export default function FotosPage() {
           </div>
         )}
 
-        <UploadCard locked={!eventProfile?.photo_uploads_enabled} onUpload={handleUpload} />
+        <UploadCard locked={false} onUpload={handleUpload} />
 
         {/* ── Approved Grid ── */}
         {approvedMoments.length > 0 && (
