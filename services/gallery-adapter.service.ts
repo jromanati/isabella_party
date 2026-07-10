@@ -24,7 +24,28 @@ export class GalleryAdapter {
     
     try {
       console.log('📤 GalleryAdapter: Iniciando subida de foto')
-      const result = await service.uploadPhoto(request)
+      
+      // Analizar con OpenAI si no se especifica status
+      let finalStatus = request.status || 'pending'
+      if (!request.status) {
+        try {
+          console.log('🤖 GalleryAdapter: Analizando foto con OpenAI...')
+          const analysis = await import('@/services/openai.service').then(m => m.OpenAIService.analyzePhoto(request.file))
+          finalStatus = analysis.isValid ? 'approved' : 'pending'
+          console.log(`🤖 GalleryAdapter: OpenAI determinó status: ${finalStatus}`)
+        } catch (error) {
+          console.warn('⚠️ GalleryAdapter: No se pudo analizar con OpenAI, usando pending')
+          finalStatus = 'pending'
+        }
+      }
+      
+      // Actualizar request con el status analizado
+      const updatedRequest = {
+        ...request,
+        status: finalStatus
+      }
+      
+      const result = await service.uploadPhoto(updatedRequest)
       
       if (result.success) {
         console.log('✅ GalleryAdapter: Foto subida exitosamente')
