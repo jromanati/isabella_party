@@ -23,13 +23,7 @@ export default function DjPage() {
   async function refresh() {
     setError(null)
     try {
-      // Autenticación
-      const token = await AuthService.getValidToken()
-      if (!token) {
-        setError('No se pudo autenticar.')
-        return
-      }
-
+      // Usar Supabase directamente - no requiere autenticación
       // Obtener todas las solicitudes (sin filtros para DJ)
       const response = await SongRequestAdapter.getSongRequests()
       
@@ -60,9 +54,7 @@ export default function DjPage() {
     setError(null)
     setLoading(true)
     try {
-      const token = await AuthService.getValidToken()
-      if (!token) throw new Error('No autenticado')
-
+      // Usar Supabase directamente - no requiere autenticación
       const response = await SongRequestAdapter.markAsPlaying(songId)
       
       if (response.success) {
@@ -81,9 +73,7 @@ export default function DjPage() {
     setError(null)
     setLoading(true)
     try {
-      const token = await AuthService.getValidToken()
-      if (!token) throw new Error('No autenticado')
-
+      // Usar Supabase directamente - no requiere autenticación
       const response = await SongRequestAdapter.markAsPlayed(songId)
       
       if (response.success) {
@@ -102,9 +92,7 @@ export default function DjPage() {
     setError(null)
     setLoading(true)
     try {
-      const token = await AuthService.getValidToken()
-      if (!token) throw new Error('No autenticado')
-
+      // Usar Supabase directamente - no requiere autenticación
       const rejectData: SongRequestReject = { 
         reason: reason || 'Rechazada por el DJ' 
       }
