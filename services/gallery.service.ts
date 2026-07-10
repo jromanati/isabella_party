@@ -5,7 +5,7 @@ export class GalleryService {
   static async uploadPhoto(request: PhotoUploadRequest): Promise<ApiResponse<PhotoUploadResponse>> {
     const formData = new FormData()
     
-    // Add file (required)
+    // Add file (required) 
     formData.append('file', request.file)
     
     // Add optional fields
