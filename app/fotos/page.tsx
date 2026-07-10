@@ -664,27 +664,32 @@ export default function FotosPage() {
         setSettingsLoading(true)
         setSettingsError(null)
 
-        // Asegurar autenticación antes de cargar el perfil del evento
-        const token = await AuthService.getValidToken()
-        if (!token) {
-          throw new Error('No se pudo autenticar con la API')
-        }
-
-        const response = await EventService.getEventProfile()
+        // EventProfile no se necesita más - configuración por defecto
+        setEventProfile({ 
+          photo_uploads_enabled: true,
+          gallery_enabled: true,
+          playlist_enabled: true,
+          guest_messages_enabled: true,
+          memory_album_enabled: true,
+          public_gallery_enabled: true,
+          photo_ai_enabled: true
+        } as any)
+        setSettingsLoading(false)
         
-        if (!response.success || !response.data) {
-          throw new Error(response.error || 'Error al cargar el perfil del evento')
-        }
-        
-        if (!cancelled) {
-          setEventProfile(response.data)
-        }
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e)
         if (!cancelled) {
           setSettingsError(message)
           // Fail closed: if settings cannot be loaded, keep uploads locked.
-          setEventProfile(null)
+          setEventProfile({ 
+            photo_uploads_enabled: false,
+            gallery_enabled: true,
+            playlist_enabled: true,
+            guest_messages_enabled: true,
+            memory_album_enabled: true,
+            public_gallery_enabled: true,
+            photo_ai_enabled: true
+          } as any)
         }
       } finally {
         if (!cancelled) setSettingsLoading(false)
@@ -708,12 +713,7 @@ export default function FotosPage() {
     }
     setUploadError(null)
 
-    // Asegurar autenticación antes de subir
-    const token = await AuthService.getValidToken()
-    if (!token) {
-      throw new Error('No se pudo autenticar con la API')
-    }
-
+    // Usar Supabase directamente - no requiere autenticación para subir fotos
     // Subir foto usando GalleryService
     const uploadRequest = {
       file,
