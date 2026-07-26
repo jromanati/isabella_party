@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, User, Check } from 'lucide-react'
+import { Search, User, Check, Clock, X } from 'lucide-react'
 import type { Guest } from '@/types/guest'
 
 interface GuestSelectorProps {
@@ -208,30 +208,37 @@ export default function GuestSelector({
                   </div>
                 </div>
               ) : (
-                filteredGuests.map((guest) => (
-                  <button
-                    key={guest.id}
-                    type="button"
-                    onClick={() => handleSelect(guest)}
-                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors text-left"
-                    style={{ fontFamily: 'var(--font-body)' }}
-                  >
-                    <User className="w-4 h-4 text-white/40 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-white/90 truncate">
-                        {guest.nickname || guest.full_name}
-                      </div>
-                      {guest.nickname && (
-                        <div className="text-xs text-white/40 truncate">
-                          {guest.full_name}
+                filteredGuests.map((guest) => {
+                  const isConfirmed = guest.rsvp_status === 'confirmed'
+                  const isDeclined = guest.rsvp_status === 'declined'
+                  const isPending = guest.rsvp_status === 'pending'
+
+                  return (
+                    <button
+                      key={guest.id}
+                      type="button"
+                      onClick={() => handleSelect(guest)}
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors text-left"
+                      style={{ fontFamily: 'var(--font-body)' }}
+                    >
+                      <User className="w-4 h-4 text-white/40 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-white/90 truncate">
+                          {guest.nickname || guest.full_name}
                         </div>
+                        {guest.nickname && (
+                          <div className="text-xs text-white/40 truncate">
+                            {guest.full_name}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {selectedGuest?.id === guest.id && (
+                        <Check className="w-4 h-4 text-purple-400 flex-shrink-0" />
                       )}
-                    </div>
-                    {selectedGuest?.id === guest.id && (
-                      <Check className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                    )}
-                  </button>
-                ))
+                    </button>
+                  )
+                })
               )}
             </div>
           </motion.div>

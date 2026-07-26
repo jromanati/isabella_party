@@ -1,4 +1,3 @@
-import { SongRequestService } from './song-request.service'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import type { SongRequest, SongRequestCreate, PublicSongRequest } from '@/types/song-request'
 import type { ApiResponse } from '@/lib/api'
@@ -56,60 +55,17 @@ export class SongRequestAdapter {
   }
 
   /**
-   * Obtener playlist pública usando el servicio configurado
+   * Obtener playlist pública usando Supabase directamente
    */
   static async getPublicPlaylist(): Promise<ApiResponse<PublicSongRequest[]>> {
-    const service = this.getService()
-    
     try {
-      console.log('📥 SongRequestAdapter: Cargando playlist pública')
+      console.log('📥 SongRequestAdapter: Cargando playlist pública desde Supabase')
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await SongRequestService.getPublicPlaylist()
-        
-        if (result.success) {
-          console.log(`✅ SongRequestAdapter: ${result.data?.length || 0} canciones cargadas desde API`)
-        } else {
-          console.error('❌ SongRequestAdapter: Error cargando playlist desde API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase')
-            try {
-              const fallbackResult = await this.getPublicPlaylistFromSupabase()
-              if (fallbackResult.success) {
-                console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ SongRequestAdapter: Fallback a Supabase falló:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.getPublicPlaylistFromSupabase()
-      }
+      // Usar Supabase directamente
+      return await this.getPublicPlaylistFromSupabase()
       
     } catch (error) {
       console.error('🚨 SongRequestAdapter: Error crítico en getPublicPlaylist:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.getPublicPlaylistFromSupabase()
-          if (fallbackResult.success) {
-            console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ SongRequestAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -119,60 +75,17 @@ export class SongRequestAdapter {
   }
 
   /**
-   * Marcar canción como sonando usando el servicio configurado
+   * Marcar canción como sonando usando Supabase directamente
    */
   static async markAsPlaying(id: number): Promise<ApiResponse<SongRequest>> {
-    const service = this.getService()
-    
     try {
       console.log('🎵 SongRequestAdapter: Marcando canción como sonando')
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await SongRequestService.markAsPlaying(id)
-        
-        if (result.success) {
-          console.log('✅ SongRequestAdapter: Canción marcada como sonando via API')
-        } else {
-          console.error('❌ SongRequestAdapter: Error marcando como sonando via API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase')
-            try {
-              const fallbackResult = await this.markAsPlayingInSupabase(id)
-              if (fallbackResult.success) {
-                console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ SongRequestAdapter: Fallback a Supabase falló:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.markAsPlayingInSupabase(id)
-      }
+      // Usar Supabase directamente
+      return await this.markAsPlayingInSupabase(id)
       
     } catch (error) {
       console.error('🚨 SongRequestAdapter: Error crítico en markAsPlaying:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.markAsPlayingInSupabase(id)
-          if (fallbackResult.success) {
-            console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ SongRequestAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -182,60 +95,17 @@ export class SongRequestAdapter {
   }
 
   /**
-   * Marcar canción como reproducida usando el servicio configurado
+   * Marcar canción como reproducida usando Supabase directamente
    */
   static async markAsPlayed(id: number): Promise<ApiResponse<SongRequest>> {
-    const service = this.getService()
-    
     try {
       console.log('🎵 SongRequestAdapter: Marcando canción como reproducida')
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await SongRequestService.markAsPlayed(id)
-        
-        if (result.success) {
-          console.log('✅ SongRequestAdapter: Canción marcada como reproducida via API')
-        } else {
-          console.error('❌ SongRequestAdapter: Error marcando como reproducida via API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase')
-            try {
-              const fallbackResult = await this.markAsPlayedInSupabase(id)
-              if (fallbackResult.success) {
-                console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ SongRequestAdapter: Fallback a Supabase falló:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.markAsPlayedInSupabase(id)
-      }
+      // Usar Supabase directamente
+      return await this.markAsPlayedInSupabase(id)
       
     } catch (error) {
       console.error('🚨 SongRequestAdapter: Error crítico en markAsPlayed:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.markAsPlayedInSupabase(id)
-          if (fallbackResult.success) {
-            console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ SongRequestAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -245,60 +115,17 @@ export class SongRequestAdapter {
   }
 
   /**
-   * Rechazar solicitud de canción usando el servicio configurado
+   * Rechazar solicitud de canción usando Supabase directamente
    */
-  static async rejectSongRequest(id: number, request: any): Promise<ApiResponse<SongRequest>> {
-    const service = this.getService()
-    
+  static async rejectSongRequest(id: number, request: { reason?: string }): Promise<ApiResponse<SongRequest>> {
     try {
       console.log('🚫 SongRequestAdapter: Rechazando solicitud de canción')
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await SongRequestService.rejectSongRequest(id, request)
-        
-        if (result.success) {
-          console.log('✅ SongRequestAdapter: Solicitud rechazada via API')
-        } else {
-          console.error('❌ SongRequestAdapter: Error rechazando via API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase')
-            try {
-              const fallbackResult = await this.rejectSongRequestInSupabase(id, request)
-              if (fallbackResult.success) {
-                console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ SongRequestAdapter: Fallback a Supabase falló:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.rejectSongRequestInSupabase(id, request)
-      }
+      // Usar Supabase directamente
+      return await this.rejectSongRequestInSupabase(id, request)
       
     } catch (error) {
       console.error('🚨 SongRequestAdapter: Error crítico en rejectSongRequest:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.rejectSongRequestInSupabase(id, request)
-          if (fallbackResult.success) {
-            console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ SongRequestAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -308,60 +135,17 @@ export class SongRequestAdapter {
   }
 
   /**
-   * Obtener canción actual usando el servicio configurado
+   * Obtener canción actual usando Supabase directamente
    */
   static async getNowPlaying(): Promise<ApiResponse<SongRequest | null>> {
-    const service = this.getService()
-    
     try {
       console.log('🎵 SongRequestAdapter: Obteniendo canción actual')
       
-      if (service === 'api') {
-        // Usar Backend API
-        const result = await SongRequestService.getNowPlaying()
-        
-        if (result.success) {
-          console.log('✅ SongRequestAdapter: Canción actual obtenida desde API')
-        } else {
-          console.error('❌ SongRequestAdapter: Error obteniendo canción actual desde API:', result.error)
-          
-          // Intentar fallback a Supabase si API falla
-          if (!USE_SUPABASE) {
-            console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase')
-            try {
-              const fallbackResult = await this.getNowPlayingFromSupabase()
-              if (fallbackResult.success) {
-                console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso')
-                return fallbackResult
-              }
-            } catch (fallbackError) {
-              console.error('❌ SongRequestAdapter: Fallback a Supabase falló:', fallbackError)
-            }
-          }
-        }
-        
-        return result
-      } else {
-        // Usar Supabase directamente
-        return await this.getNowPlayingFromSupabase()
-      }
+      // Usar Supabase directamente
+      return await this.getNowPlayingFromSupabase()
       
     } catch (error) {
       console.error('🚨 SongRequestAdapter: Error crítico en getNowPlaying:', error)
-      
-      // Intentar fallback si el error es del servicio principal
-      if (service === 'api' && !USE_SUPABASE) {
-        console.log('🔄 SongRequestAdapter: Intentando fallback a Supabase (error catch)')
-        try {
-          const fallbackResult = await this.getNowPlayingFromSupabase()
-          if (fallbackResult.success) {
-            console.log('✅ SongRequestAdapter: Fallback a Supabase exitoso (catch)')
-            return fallbackResult
-          }
-        } catch (fallbackError) {
-          console.error('❌ SongRequestAdapter: Fallback a Supabase falló (catch):', fallbackError)
-        }
-      }
       
       return {
         success: false,
@@ -622,45 +406,6 @@ export class SongRequestAdapter {
   }
 
   /**
-   * Obtener configuración actual
-   */
-  static getConfig() {
-    return {
-      useBackendAPI: USE_BACKEND_API,
-      useSupabase: USE_SUPABASE,
-      currentService: USE_BACKEND_API ? 'Backend API' : USE_SUPABASE ? 'Supabase' : 'Backend API (default)'
-    }
-  }
-
-  /**
-   * Verificar disponibilidad de servicios
-   */
-  static async checkServices(): Promise<{ api: boolean; supabase: boolean }> {
-    const results = { api: false, supabase: false }
-    
-    // Probar Backend API
-    try {
-      const apiTest = await SongRequestService.getPublicPlaylist()
-      results.api = apiTest.success
-    } catch (error) {
-      console.error('Backend API check failed:', error)
-      results.api = false
-    }
-    
-    // Probar Supabase
-    try {
-      const supabaseTest = await this.getPublicPlaylistFromSupabase()
-      results.supabase = supabaseTest.success
-    } catch (error) {
-      console.error('Supabase check failed:', error)
-      results.supabase = false
-    }
-    
-    console.log('🔍 SongRequestAdapter: Service availability:', results)
-    return results
-  }
-
-  /**
    * Marcar canción como sonando en Supabase
    */
   private static async markAsPlayingInSupabase(id: number): Promise<ApiResponse<SongRequest>> {
@@ -835,7 +580,7 @@ export class SongRequestAdapter {
   /**
    * Rechazar solicitud de canción en Supabase
    */
-  private static async rejectSongRequestInSupabase(id: number, request: any): Promise<ApiResponse<SongRequest>> {
+  private static async rejectSongRequestInSupabase(id: number, request: { reason?: string }): Promise<ApiResponse<SongRequest>> {
     try {
       const supabase = getSupabaseClient()
       
@@ -863,8 +608,8 @@ export class SongRequestAdapter {
       const { data, error } = await supabase
         .from('song_requests')
         .update({ 
-          status: 'rejected',
-          rejection_reason: request.reason || 'Rechazada por el DJ'
+          status: 'rejected' as const,
+          rejection_reason: (request.reason || 'Rechazada por el DJ') as string
         })
         .eq('id', targetSong.id)
         .select()

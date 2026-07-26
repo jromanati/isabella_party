@@ -112,13 +112,13 @@ export default function LocationRsvp({
                   Dirección
                 </p>
                 <p className="text-white font-semibold text-lg leading-snug font-sans">
-                  Centro de Eventos Colibri
+                  Movistar Arena
                 </p>
                 <p
                   className="text-sm mt-1 leading-relaxed"
                   style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-body)' }}
                 >
-                  German Ebbinghauss 2617, Puente Alto
+                  Av. Beauchef 1204, Santiago, Región Metropolitana
                   <br />
                   Región Metropolitana, Chile
                 </p>
@@ -126,7 +126,7 @@ export default function LocationRsvp({
             </div>
 
             <motion.a
-              href="https://www.google.com/maps/place/Centro+de+Eventos+Colibr%C3%AD/@-33.5870916,-70.5748445,17z/data=!3m1!4b1!4m6!3m5!1s0x9662d78ece0cbb77:0x87552de156255ca0!8m2!3d-33.5870916!4d-70.5722696!16s%2Fg%2F11y5fzm9dj?entry=ttu&g_ep=EgoyMDI2MDUxMy4wIKXMDSoASAFQAw%3D%3D"
+              href="https://www.google.com/maps/place/Movistar+Arena/@-33.4625726,-70.6642699,17z/data=!3m1!4b1!4m6!3m5!1s0x9662c51b935c0c23:0xfe177137c9c9c6c8!8m2!3d-33.4625726!4d-70.661695!16zL20vMGRqajk0?entry=ttu&g_ep=EgoyMDI2MDcyMS4wIKXMDSoASAFQAw%3D%3D"
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ scale: 1.02, y: -1 }}

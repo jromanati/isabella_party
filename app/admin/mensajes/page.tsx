@@ -559,25 +559,12 @@ export default function AdminMensajesPage() {
                 <p className="mt-2 text-white/60" style={{ fontFamily: 'var(--font-body)' }}>
                   Revisa y aprueba los mensajes de los invitados
                 </p>
-              </div>
+              </div>              
               
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/admin-galeria"
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all"
-                  style={{
-                    background: 'rgba(59,130,246,0.1)',
-                    backdropFilter: 'blur(10px)',
-                  }}
-                >
-                  <ImageIcon className="w-4 h-4" />
-                  <span className="text-sm font-medium">Galería</span>
-                </Link>
-              </div>
             </div>
 
             <Link
-              href="/"
+              href="/admin"
               className="px-4 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all"
             >
               Volver al inicio

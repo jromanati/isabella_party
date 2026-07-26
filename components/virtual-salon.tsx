@@ -39,7 +39,7 @@ type TableGuest = {
   id: number
   name: string
   nickname?: string
-  status: 'pending' | 'confirmed'
+  status: 'pending' | 'confirmed' | 'declined'
 }
 
 type TableData = {
@@ -94,7 +94,7 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
         const byTable = new Map<number, TableGuest[]>()
         for (const guest of response.data) {
           if (!guest.table) continue
-          const status = guest.rsvp_status === 'confirmed' ? 'confirmed' : 'pending'
+          const status = guest.rsvp_status === 'confirmed' ? 'confirmed' : guest.rsvp_status === 'declined' ? 'declined' : 'pending'
           const tableGuest: TableGuest = {
             id: guest.id,
             name: guest.full_name,
@@ -740,39 +740,26 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{
-                            background: guest.status === 'confirmed' ? '#4ade80' : '#f87171',
-                            boxShadow: guest.status === 'confirmed' ? '0 0 6px #4ade80' : '0 0 6px #f87171',
+                            background: guest.status === 'confirmed' ? '#4ade80' : guest.status === 'declined' ? '#f87171' : '#fbbf24',
+                            boxShadow: guest.status === 'confirmed' ? '0 0 6px #4ade80' : guest.status === 'declined' ? '0 0 6px #f87171' : '0 0 6px #fbbf24',
                           }}
                         />
                         <span className="text-sm text-white/85 font-medium">{guest.name}</span>
                       </div>
-                      {guest.status === 'pending' ? (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => handleConfirm(guest.id)}
-                          disabled={confirmingGuestId === guest.id}
-                          className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                          style={{
-                            background: 'rgba(236,72,153,0.14)',
-                            border: '1px solid rgba(236,72,153,0.38)',
-                            color: '#f9a8d4',
-                            opacity: confirmingGuestId === guest.id ? 0.6 : 1,
-                          }}
-                        >
-                          {confirmingGuestId === guest.id ? 'Confirmando…' : 'Confirmar'}
-                        </motion.button>
+                      {guest.status === 'confirmed' ? (
+                        <span className="text-xs font-medium inline-flex items-center gap-1" style={{ color: '#4ade80' }}>
+                          <Check className="w-3 h-3" />
+                          Confirmado
+                        </span>
+                      ) : guest.status === 'declined' ? (
+                        <span className="text-xs font-medium inline-flex items-center gap-1" style={{ color: '#f87171' }}>
+                          <X className="w-3 h-3" />
+                          No asistirá
+                        </span>
                       ) : (
-                        guest.status === 'confirmed' ? (
-                          <span className="text-xs font-medium inline-flex items-center gap-1" style={{ color: '#4ade80' }}>
-                            <Check className="w-3 h-3" />
-                            Confirmado
-                          </span>
-                        ) : (
-                          <span className="text-xs font-medium" style={{ color: '#f87171' }}>
-                            Pendiente
-                          </span>
-                        )
+                        <span className="text-xs font-medium inline-flex items-center gap-1" style={{ color: '#fbbf24' }}>
+                          Pendiente
+                        </span>
                       )}
                     </div>
                   ))}
@@ -872,39 +859,26 @@ export default function VirtualSalon({ onClose }: { onClose: () => void }) {
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{
-                            background: guest.status === 'confirmed' ? '#4ade80' : '#f87171',
-                            boxShadow: guest.status === 'confirmed' ? '0 0 6px #4ade80' : '0 0 6px #f87171',
+                            background: guest.status === 'confirmed' ? '#4ade80' : guest.status === 'declined' ? '#f87171' : '#fbbf24',
+                            boxShadow: guest.status === 'confirmed' ? '0 0 6px #4ade80' : guest.status === 'declined' ? '0 0 6px #f87171' : '0 0 6px #fbbf24',
                           }}
                         />
                         <span className="text-sm text-white/85 font-medium">{guest.name}</span>
                       </div>
-                      {guest.status === 'pending' ? (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => handleConfirm(guest.id)}
-                          disabled={confirmingGuestId === guest.id}
-                          className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                          style={{
-                            background: 'rgba(236,72,153,0.14)',
-                            border: '1px solid rgba(236,72,153,0.38)',
-                            color: '#f9a8d4',
-                            opacity: confirmingGuestId === guest.id ? 0.6 : 1,
-                          }}
-                        >
-                          {confirmingGuestId === guest.id ? 'Confirmando…' : 'Confirmar'}
-                        </motion.button>
+                      {guest.status === 'confirmed' ? (
+                        <span className="text-xs font-medium inline-flex items-center gap-1" style={{ color: '#4ade80' }}>
+                          <Check className="w-3 h-3" />
+                          Confirmado
+                        </span>
+                      ) : guest.status === 'declined' ? (
+                        <span className="text-xs font-medium inline-flex items-center gap-1" style={{ color: '#f87171' }}>
+                          <X className="w-3 h-3" />
+                          No asistirá
+                        </span>
                       ) : (
-                        guest.status === 'confirmed' ? (
-                          <span className="text-xs font-medium inline-flex items-center gap-1" style={{ color: '#4ade80' }}>
-                            <Check className="w-3 h-3" />
-                            Confirmado
-                          </span>
-                        ) : (
-                          <span className="text-xs font-medium" style={{ color: '#f87171' }}>
-                            Pendiente
-                          </span>
-                        )
+                        <span className="text-xs font-medium inline-flex items-center gap-1" style={{ color: '#fbbf24' }}>
+                          Pendiente
+                        </span>
                       )}
                     </div>
                   ))}

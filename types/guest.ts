@@ -4,6 +4,7 @@ export interface Guest {
   email?: string
   phone?: string
   rsvp_status?: 'pending' | 'confirmed' | 'declined'
+  rsvp_message?: string | null
   plus_one?: boolean
   plus_one_name?: string
   table_number?: number | null

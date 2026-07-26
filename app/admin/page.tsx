@@ -1,215 +1,232 @@
 'use client'
 
+import { motion } from 'framer-motion'
+import { Users, Image as ImageIcon, MessageSquare, Film, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { SmartNotificationToast } from '@/components/ui/SmartNotificationToast'
-import { NotificationBell } from '@/components/ui/NotificationBell'
-import { usePollingUpdates } from '@/hooks/usePollingUpdates'
-import { useAutoMarkAsReviewed } from '@/hooks/useAutoMarkAsReviewed'
-import { PollingService } from '@/services/polling.service'
-
-export default function AdminPage() {
-  const { 
-    isPolling, 
-    hasAnyNew, 
-    lastCheck,
-    forceCheck,
-    getDebugInfo,
-    hasNewPhotos,
-    hasNewMessages,
-    hasNewSongs,
-    photosUpdate,
-    messagesUpdate,
-    songsUpdate,
-    getNewCount,
-    markAsReviewed,
-    markAllAsReviewed
-  } = usePollingUpdates(true, 30000) // Iniciar con 30 segundos
-
-  // Auto-marcar como revisado cuando se entra a secciones
-  useAutoMarkAsReviewed()
-
-  // Obtener instancia del PollingService para debugging
-  const pollingService = PollingService.getInstance()
-
-  // Debug: Log estado del polling
-  useEffect(() => {
-    if (isPolling) {
-      console.log('🔄 Polling activo en página admin')
-    }
-  }, [isPolling])
-
-  // Debug: Obtener información de depuración
-  const handleDebug = async () => {
-    const debugInfo = await getDebugInfo()
-    console.log('🐛 Debug info:', debugInfo)
-  }
+// ── Neon ambience ───────────────────────────────────────────────
+function NeonAmbience() {
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: '#050308' }}>
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden>
       <div
-        className="pointer-events-none fixed inset-0"
+        className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[80vw] h-[50vh]"
         style={{
-          background:
-            'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(168,85,247,0.16) 0%, transparent 70%), radial-gradient(ellipse 80% 60% at 50% 100%, rgba(236,72,153,0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse, rgba(168,85,247,0.1) 0%, transparent 70%)',
+          filter: 'blur(60px)',
         }}
       />
+      <div
+        className="absolute bottom-0 right-0 w-[40vw] h-[30vh]"
+        style={{
+          background: 'radial-gradient(ellipse, rgba(59,130,246,0.07) 0%, transparent 70%)',
+          filter: 'blur(80px)',
+        }}
+      />
+    </div>
+  )
+}
 
-      <div className="relative max-w-3xl mx-auto flex flex-col gap-8">
-        <header className="text-center">
-          <p className="text-xs font-semibold tracking-[0.35em] uppercase text-white/40">Administración</p>
-          <h1
-            className="mt-3 font-sans font-black italic leading-tight"
+// ── Menu Card ───────────────────────────────────────────────────
+function MenuCard({
+  title,
+  description,
+  icon: Icon,
+  href,
+  color,
+  delay,
+}: {
+  title: string
+  description: string
+  icon: any
+  href: string
+  color: string
+  delay: number
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay }}
+    >
+      <Link href={href}>
+        <motion.div
+          whileHover={{ scale: 1.02, y: -4 }}
+          whileTap={{ scale: 0.98 }}
+          className="relative rounded-2xl overflow-hidden p-6"
+          style={{
+            background: 'rgba(10,5,20,0.8)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(24px)',
+          }}
+        >
+          <div
+            className="h-px w-full mb-4"
             style={{
-              fontSize: 'clamp(2.2rem, 8vw, 3.4rem)',
-              backgroundImage:
-                'linear-gradient(135deg, #ffffff 0%, #f9a8d4 40%, #c084fc 70%, #818cf8 100%)',
+              background: `linear-gradient(to right, transparent, rgba(${color},0.5), transparent)`,
+              boxShadow: `0 0 12px rgba(${color},0.25)`,
+            }}
+          />
+          
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: `rgba(${color},0.15)`,
+                    border: `1px solid rgba(${color},0.3)`,
+                  }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: `rgb(${color})` }} />
+                </div>
+                <h2 className="font-sans font-black italic text-xl text-white">{title}</h2>
+              </div>
+              <p
+                className="text-sm"
+                style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-body)' }}
+              >
+                {description}
+              </p>
+            </div>
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{
+                background: `rgba(${color},0.1)`,
+                border: `1px solid rgba(${color},0.2)`,
+              }}
+            >
+              <ArrowRight className="w-4 h-4" style={{ color: `rgb(${color})` }} />
+            </div>
+          </div>
+        </motion.div>
+      </Link>
+    </motion.div>
+  )
+}
+
+// ── Page ────────────────────────────────────────────────────────
+export default function AdminPage() {
+  const menuItems = [
+    {
+      title: 'Invitados',
+      description: 'Gestión completa de invitados, confirmaciones y mesas',
+      icon: Users,
+      href: '/admin/invitados',
+      color: '59,130,246',
+      delay: 0.1,
+    },
+    {
+      title: 'Galería',
+      description: 'Aprobar/rechazar fotos y controlar acceso a subida',
+      icon: ImageIcon,
+      href: '/admin/galeria',
+      color: '168,85,247',
+      delay: 0.2,
+    },
+    {
+      title: 'Álbumes',
+      description: 'Crear y gestionar álbumes de fotos y videos',
+      icon: Film,
+      href: '/admin/albumes',
+      color: '34,197,94',
+      delay: 0.3,
+    },
+    {
+      title: 'Mensajes',
+      description: 'Revisar y moderar mensajes de los invitados',
+      icon: MessageSquare,
+      href: '/admin/mensajes',
+      color: '236,72,153',
+      delay: 0.4,
+    },
+  ]
+
+  return (
+    <main className="min-h-screen" style={{ background: '#050308' }}>
+      <NeonAmbience />
+
+      {/* ── Nav ── */}
+      <nav
+        className="fixed top-0 inset-x-0 z-40 flex items-center justify-between px-5 py-4"
+        style={{
+          background: 'rgba(5,3,8,0.85)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(168,85,247,0.1)',
+        }}
+      >
+        <Link href="/">
+          <span
+            className="font-sans font-black italic text-lg"
+            style={{
+              background: 'linear-gradient(135deg, #f9a8d4, #c084fc)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              filter: 'drop-shadow(0 0 26px rgba(192,132,252,0.35))',
             }}
           >
-            Control del evento
-          </h1>
-          <p className="mt-3 text-white/55" style={{ fontFamily: 'var(--font-body)' }}>
-            Accesos rápidos para el DJ / encargado.
+            Isabella XV
+          </span>
+        </Link>
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
+          style={{
+            background: 'rgba(168,85,247,0.1)',
+            border: '1px solid rgba(168,85,247,0.2)',
+            color: 'rgba(192,132,252,0.8)',
+            fontFamily: 'var(--font-body)',
+          }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full animate-pulse"
+            style={{ background: '#a855f7', boxShadow: '0 0 6px #a855f7' }}
+          />
+          Admin
+        </div>
+      </nav>
+
+      <div className="relative pt-24 pb-20 px-5 max-w-lg mx-auto flex flex-col gap-6">
+
+        {/* ── Page title ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="pt-2"
+        >
+          <p
+            className="text-xs font-semibold tracking-[0.3em] uppercase mb-2"
+            style={{ color: '#c084fc', fontFamily: 'var(--font-body)' }}
+          >
+            Panel de control
           </p>
-        </header>
+          <h1
+            className="font-sans font-black italic"
+            style={{
+              fontSize: 'clamp(2rem, 10vw, 3.5rem)',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f9a8d4 40%, #c084fc 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              filter: 'drop-shadow(0 0 20px rgba(192,132,252,0.3))',
+            }}
+          >
+            Administración
+          </h1>
+          <p
+            className="mt-3 text-sm"
+            style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-body)' }}
+          >
+            Selecciona una sección para gestionar
+          </p>
+        </motion.div>
 
-        {/* Sistema de notificaciones inteligente */}
-        <SmartNotificationToast />
-        
-        {/* Campana de notificaciones persistente */}
-        <NotificationBell 
-          hasAnyNew={hasAnyNew}
-          hasNewPhotos={hasNewPhotos}
-          hasNewMessages={hasNewMessages}
-          hasNewSongs={hasNewSongs}
-          photosUpdate={photosUpdate}
-          messagesUpdate={messagesUpdate}
-          songsUpdate={songsUpdate}
-          getNewCount={getNewCount}
-          markAsReviewed={markAsReviewed}
-          markAllAsReviewed={markAllAsReviewed}
-        />
-
-        {/* Indicador de estado del sistema */}
-        <div className="flex items-center justify-between text-xs text-white/40">
-          <div className="flex items-center gap-4">
-            <span className={`flex items-center gap-1 ${isPolling ? 'text-green-400/60' : 'text-red-400/60'}`}>
-              <div className={`w-2 h-2 rounded-full ${isPolling ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-              Sistema {isPolling ? 'activo' : 'inactivo'}
-            </span>
-            {lastCheck && (
-              <span>
-                Última verificación: {new Date(lastCheck).toLocaleTimeString()}
-              </span>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button
-              onClick={forceCheck}
-              className="text-white/40 hover:text-white/60 transition-colors"
-              title="Forzar verificación"
-            >
-              🔄 Verificar ahora
-            </button>
-            
-            <button
-              onClick={handleDebug}
-              className="text-white/40 hover:text-white/60 transition-colors"
-              title="Debug info (consola)"
-            >
-              🐛 Debug
-            </button>
-            
-            <button
-              onClick={() => pollingService.forceNotification('messages')}
-              className="text-white/40 hover:text-white/60 transition-colors"
-              title="Forzar notificación de mensaje"
-            >
-              💬 Forzar msg
-            </button>
-            
-            <button
-              onClick={() => console.log('Estado completo:', pollingService.getDebugState())}
-              className="text-white/40 hover:text-white/60 transition-colors"
-              title="Ver estado completo (consola)"
-            >
-              📊 Estado
-            </button>
-          </div>
+        {/* ── Menu Items ── */}
+        <div className="flex flex-col gap-4">
+          {menuItems.map((item) => (
+            <MenuCard key={item.href} {...item} />
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          <Card className="border-white/10 bg-black/35">
-            <CardHeader>
-              <CardTitle className="text-white/90">Slideshow</CardTitle>
-              <CardDescription className="text-white/55">Mostrar fotos recientes en pantalla.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                asChild
-                className="w-full bg-purple-500/15 hover:bg-purple-500/20 text-white border border-purple-400/25"
-              >
-                <Link href="/slideshow">Abrir /slideshow</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/10 bg-black/35">
-            <CardHeader>
-              <CardTitle className="text-white/90">Panel DJ</CardTitle>
-              <CardDescription className="text-white/55">Ver y administrar canciones sugeridas.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                asChild
-                className="w-full bg-pink-500/15 hover:bg-pink-500/20 text-white border border-pink-400/25"
-              >
-                <Link href="/dj">Abrir /dj</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/10 bg-black/35">
-            <CardHeader>
-              <CardTitle className="text-white/90">Now Playing</CardTitle>
-              <CardDescription className="text-white/55">Pantalla fullscreen de la canción actual + QR.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                asChild
-                className="w-full bg-blue-500/15 hover:bg-blue-500/20 text-white border border-blue-400/25"
-              >
-                <Link href="/now-playing">Abrir /now-playing</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/10 bg-black/35">
-            <CardHeader>
-              <CardTitle className="text-white/90">Slideshow de Mensajes</CardTitle>
-              <CardDescription className="text-white/55">Mostrar mensajes de invitados en pantalla.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                asChild
-                className="w-full bg-green-500/15 hover:bg-green-500/20 text-white border border-green-400/25"
-              >
-                <Link href="/messages-slideshow">Abrir /messages-slideshow</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <p className="text-xs text-white/25 text-center" style={{ fontFamily: 'var(--font-body)' }}>
-          Tip: puedes guardar esta página como favorito en el iPad del DJ.
-        </p>
       </div>
     </main>
   )

@@ -16,6 +16,7 @@ import { SongRequestAdapter } from '@/services/song-request-adapter.service'
 import { AuthService } from '@/services/auth.service'
 import type { Guest } from '@/types/guest'
 import GuestSelector from '@/components/guest-selector'
+import { searchITunesSongs } from '@/lib/itunes'
 
 export default function PlaylistPage() {
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null)
@@ -74,25 +75,15 @@ export default function PlaylistPage() {
 
     setSearchLoading(true)
     try {
-      const res = await fetch('/api/song-search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
-      })
+      const results = await searchITunesSongs(query)
+      setResults(results)
 
-      const data: unknown = await res.json().catch(() => null)
-      if (!res.ok || !data || typeof data !== 'object') {
-        setResults([])
-        setSearchError('No se pudo buscar en este momento. Intenta de nuevo.')
-        return
-      }
-
-      const obj = data as { results: ITunesSongResult[] }
-      setResults(Array.isArray(obj.results) ? obj.results : [])
-
-      if (!Array.isArray(obj.results) || obj.results.length === 0) {
+      if (results.length === 0) {
         setSearchError('No encontramos resultados. Intenta con otro nombre o artista.')
       }
+    } catch {
+      setResults([])
+      setSearchError('No se pudo buscar en este momento. Intenta de nuevo.')
     } finally {
       setSearchLoading(false)
     }
@@ -120,10 +111,6 @@ export default function PlaylistPage() {
 
     setSubmitLoading(true)
     try {
-      // Autenticación
-      const token = await AuthService.getValidToken()
-      if (!token) throw new Error('No se pudo autenticar')
-
       // Mapear iTunes → SongRequestCreate
       const songRequest: SongRequestCreate = {
         guest: selectedGuest.id,

@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, X, Eye, Lock, Unlock, Clock, LayoutGrid, Image as ImageIcon, Trash2, MessageSquare } from 'lucide-react'
+import { Check, X, Eye, Lock, Unlock, Clock, LayoutGrid, Image as ImageIcon, Trash2, MessageSquare, ArrowLeft } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { GalleryAdapter } from '@/services/gallery-adapter.service'
@@ -139,11 +139,13 @@ function ModerationCard({
   onApprove,
   onReject,
   showActions,
+  onClick,
 }: {
   photo: GalleryPhoto
   onApprove?: () => void
   onReject?: () => void
   showActions: boolean
+  onClick?: () => void
 }) {
   return (
     <motion.div
@@ -152,12 +154,13 @@ function ModerationCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4 }}
-      className="relative rounded-xl overflow-hidden"
+      className="relative rounded-xl overflow-hidden cursor-pointer"
       style={{
         background: 'rgba(10,5,20,0.7)',
         border: '1px solid rgba(255,255,255,0.07)',
         backdropFilter: 'blur(16px)',
       }}
+      onClick={onClick}
     >
       {/* Status accent top line */}
       <div
@@ -389,38 +392,7 @@ function GalleryControlCard({
         </div>
 
         {/* Quick links */}
-        <div className="flex gap-2 mt-4">
-          <Link href="/fotos" className="flex-1">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-300"
-              style={{
-                background: 'rgba(168,85,247,0.08)',
-                border: '1px solid rgba(168,85,247,0.2)',
-                color: 'rgba(192,132,252,0.8)',
-                fontFamily: 'var(--font-body)',
-              }}
-            >
-              <Eye className="w-3.5 h-3.5" />
-              Ver galería pública
-            </motion.div>
-          </Link>
-          <Link href="/slideshow" className="flex-1">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-300"
-              style={{
-                background: 'rgba(59,130,246,0.08)',
-                border: '1px solid rgba(59,130,246,0.2)',
-                color: 'rgba(96,165,250,0.8)',
-                fontFamily: 'var(--font-body)',
-              }}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              Abrir slideshow
-            </motion.div>
-          </Link>
-        </div>
+        
       </div>
     </motion.div>
   )
@@ -507,10 +479,21 @@ export default function AdminGaleriaPage() {
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsError, setSettingsError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('pending')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedPhoto, setSelectedPhoto] = useState<AdminGalleryPhoto | null>(null)
+  const itemsPerPage = 8
 
   const pending = photos.filter((p) => p.status === 'pending')
   const approved = photos.filter((p) => p.status === 'approved')
   const rejected = photos.filter((p) => p.status === 'rejected')
+
+  // Paginación
+  const photosByTab = { pending, approved, rejected }
+  const currentTabPhotos = photosByTab[activeTab]
+  const totalPages = Math.ceil(currentTabPhotos.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedPhotos = currentTabPhotos.slice(startIndex, endIndex)
 
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 
@@ -610,6 +593,10 @@ export default function AdminGaleriaPage() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab])
 
   useEffect(() => {
     let cancelled = false
@@ -759,19 +746,17 @@ export default function AdminGaleriaPage() {
           borderBottom: '1px solid rgba(168,85,247,0.1)',
         }}
       >
-        <Link href="/">
-          <span
-            className="font-sans font-black italic text-lg"
-            style={{
-              background: 'linear-gradient(135deg, #f9a8d4, #c084fc)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            Isabella XV
-          </span>
-        </Link>
+        <span
+          className="font-sans font-black italic text-lg"
+          style={{
+            background: 'linear-gradient(135deg, #f9a8d4, #c084fc)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
+          Isabella XV
+        </span>
         <div
           className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
           style={{
@@ -789,7 +774,7 @@ export default function AdminGaleriaPage() {
         </div>
       </nav>
 
-      <div className="relative pt-24 pb-20 px-5 max-w-lg mx-auto flex flex-col gap-6">
+      <div className="relative pt-24 pb-20 px-5 max-w-6xl mx-auto flex flex-col gap-6">
 
         {/* ── Page title ── */}
         <motion.div
@@ -798,6 +783,17 @@ export default function AdminGaleriaPage() {
           transition={{ duration: 0.7 }}
           className="pt-2"
         >
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all mb-4"
+            style={{
+              background: 'rgba(168,85,247,0.1)',
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">Volver al menú</span>
+          </Link>
           <p
             className="text-xs font-semibold tracking-[0.3em] uppercase mb-2"
             style={{ color: '#c084fc', fontFamily: 'var(--font-body)' }}
@@ -818,20 +814,6 @@ export default function AdminGaleriaPage() {
             >
               Galería
             </h1>
-            
-            <div className="flex items-center gap-3">
-              <Link
-                href="/admin-mensajes"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all"
-                style={{
-                  background: 'rgba(168,85,247,0.1)',
-                  backdropFilter: 'blur(10px)',
-                }}
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span className="text-sm font-medium">Mensajes</span>
-              </Link>
-            </div>
           </div>
         </motion.div>
 
@@ -936,27 +918,65 @@ export default function AdminGaleriaPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <AnimatePresence>
-                  {tabPhotos[activeTab].map((photo) => (
-                    <ModerationCard
-                      key={photo.id}
-                      photo={photo}
-                      showActions={activeTab === 'pending'}
-                      onApprove={
-                        savingPhotoId === photo.id
-                          ? undefined
-                          : () => updateStatus(photo.id, 'approved')
-                      }
-                      onReject={
-                        savingPhotoId === photo.id
-                          ? undefined
-                          : () => updateStatus(photo.id, 'rejected')
-                      }
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <AnimatePresence>
+                    {paginatedPhotos.map((photo) => (
+                      <ModerationCard
+                        key={photo.id}
+                        photo={photo}
+                        showActions={activeTab === 'pending'}
+                        onClick={() => setSelectedPhoto(photo)}
+                        onApprove={
+                          savingPhotoId === photo.id
+                            ? undefined
+                            : () => updateStatus(photo.id, 'approved')
+                        }
+                        onReject={
+                          savingPhotoId === photo.id
+                            ? undefined
+                            : () => updateStatus(photo.id, 'rejected')
+                        }
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: 'rgba(168,85,247,0.1)',
+                        border: '1px solid rgba(168,85,247,0.3)',
+                        color: 'rgba(255,255,255,0.8)',
+                        fontFamily: 'var(--font-body)',
+                      }}
+                    >
+                      Anterior
+                    </button>
+                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)' }}>
+                      {currentPage} de {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: 'rgba(168,85,247,0.1)',
+                        border: '1px solid rgba(168,85,247,0.3)',
+                        color: 'rgba(255,255,255,0.8)',
+                        fontFamily: 'var(--font-body)',
+                      }}
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </motion.div>
         </AnimatePresence>
@@ -976,6 +996,7 @@ export default function AdminGaleriaPage() {
         )}
 
         {/* ── Guests list ── */}
+        {/*
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1164,6 +1185,94 @@ export default function AdminGaleriaPage() {
             )}
           </div>
         </motion.div>
+        */}
+
+        {/* ── Image Modal ── */}
+        <AnimatePresence>
+          {selectedPhoto && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ background: 'rgba(0,0,0,0.9)' }}
+              onClick={() => setSelectedPhoto(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="relative max-w-4xl max-h-[90vh] w-full"
+                style={{ background: 'rgba(10,5,20,0.95)' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => setSelectedPhoto(null)}
+                  className="absolute top-4 right-4 z-10 p-2 rounded-full"
+                  style={{ background: 'rgba(0,0,0,0.5)' }}
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <img
+                    src={selectedPhoto.url}
+                    alt={selectedPhoto.guestName}
+                    className="max-w-full max-h-[80vh] object-contain"
+                  />
+                </div>
+
+                <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between gap-4" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}>
+                  <div className="flex-1">
+                    <p className="text-white font-semibold" style={{ fontFamily: 'var(--font-body)' }}>
+                      {selectedPhoto.guestName}
+                    </p>
+                    <p className="text-white/60 text-sm" style={{ fontFamily: 'var(--font-body)' }}>
+                      {selectedPhoto.uploadedAt ? formatUploadDate(selectedPhoto.uploadedAt) : ''}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          updateStatus(selectedPhoto.id, 'approved')
+                          setSelectedPhoto(null)
+                        }}
+                        disabled={savingPhotoId === selectedPhoto.id}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold"
+                        style={{
+                          background: 'rgba(34,197,94,0.15)',
+                          border: '1px solid rgba(34,197,94,0.4)',
+                          color: '#4ade80',
+                          fontFamily: 'var(--font-body)',
+                        }}
+                      >
+                        <Check className="w-4 h-4" />
+                        Aprobar
+                      </button>
+                      <button
+                        onClick={() => {
+                          updateStatus(selectedPhoto.id, 'rejected')
+                          setSelectedPhoto(null)
+                        }}
+                        disabled={savingPhotoId === selectedPhoto.id}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold"
+                        style={{
+                          background: 'rgba(239,68,68,0.15)',
+                          border: '1px solid rgba(239,68,68,0.4)',
+                          color: '#f87171',
+                          fontFamily: 'var(--font-body)',
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                        Rechazar
+                      </button>
+                    </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     </main>

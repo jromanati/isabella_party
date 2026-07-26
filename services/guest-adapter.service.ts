@@ -44,7 +44,7 @@ export class GuestAdapter {
       
       const { data, error } = await supabase
         .from('guests')
-        .select('id, full_name, email, phone, rsvp_status, table_number')
+        .select('id, full_name, email, phone, rsvp_status, rsvp_message, table_number')
         .order('full_name', { ascending: true }) as any
 
       if (error) {
@@ -59,6 +59,7 @@ export class GuestAdapter {
         email: item.email || '',
         phone: item.phone || '',
         rsvp_status: item.rsvp_status || 'pending',
+        rsvp_message: item.rsvp_message || null,
         plus_one: false, // Campo no existe en Supabase, valor por defecto
         plus_one_name: '', // Campo no existe en Supabase, valor por defecto
         table_number: item.table_number || null,
@@ -113,7 +114,7 @@ export class GuestAdapter {
         .update({
           rsvp_status: payload.status
         })
-        .eq('id', guestId)
+        .eq('id', String(guestId))
         .select()
         .single() as any
 
@@ -136,6 +137,159 @@ export class GuestAdapter {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Error desconocido actualizando RSVP en Supabase'
+      }
+    }
+  }
+
+  /**
+   * Crear invitado usando Supabase
+   */
+  static async createGuest(data: { full_name: string; table: number | null; email?: string }): Promise<ApiResponse<Guest>> {
+    try {
+      console.log('➕ GuestAdapter: Creando invitado')
+      
+      const supabase = getSupabaseClient()
+      
+      const { data: created, error } = await supabase
+        .from('guests')
+        .insert({
+          full_name: data.full_name,
+          normalized_name: data.full_name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+          table_number: data.table,
+          email: data.email || null,
+          rsvp_status: 'pending'
+        })
+        .select()
+        .single() as any
+
+      if (error) {
+        console.error('Supabase error:', error)
+        throw new Error(error.message || 'Error creando invitado en Supabase')
+      }
+
+      const guest: Guest = {
+        id: created.id,
+        full_name: created.full_name,
+        email: created.email || '',
+        phone: created.phone || '',
+        rsvp_status: created.rsvp_status || 'pending',
+        plus_one: false,
+        plus_one_name: '',
+        table_number: created.table_number || null,
+        table: created.table_number || null,
+        nickname: created.full_name.split(' ')[0] || '',
+        notes: ''
+      }
+
+      return {
+        success: true,
+        data: guest
+      }
+
+    } catch (error) {
+      console.error('GuestAdapter.createGuest error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error desconocido creando invitado'
+      }
+    }
+  }
+
+  /**
+   * Actualizar invitado usando Supabase
+   */
+  static async updateGuest(id: number, data: { full_name: string; table: number | null; rsvp_status?: string; email?: string; rsvp_message?: string | null }): Promise<ApiResponse<Guest>> {
+    try {
+      console.log(`✏️ GuestAdapter: Actualizando invitado ${id}`)
+      
+      const supabase = getSupabaseClient()
+      
+      const updateData: any = {
+        full_name: data.full_name,
+        table_number: data.table
+      }
+      
+      if (data.rsvp_status) {
+        updateData.rsvp_status = data.rsvp_status
+      }
+      
+      if (data.email !== undefined) {
+        updateData.email = data.email || null
+      }
+      
+      if (data.rsvp_message !== undefined) {
+        updateData.rsvp_message = data.rsvp_message || null
+      }
+      
+      const { data: updated, error } = await supabase
+        .from('guests')
+        .update(updateData)
+        .eq('id', String(id))
+        .select()
+        .single() as any
+
+      if (error) {
+        console.error('Supabase error:', error)
+        throw new Error(error.message || 'Error actualizando invitado en Supabase')
+      }
+
+      const guest: Guest = {
+        id: updated.id,
+        full_name: updated.full_name,
+        email: updated.email || '',
+        phone: updated.phone || '',
+        rsvp_status: updated.rsvp_status || 'pending',
+        plus_one: false,
+        plus_one_name: '',
+        table_number: updated.table_number || null,
+        table: updated.table_number || null,
+        nickname: updated.full_name.split(' ')[0] || '',
+        notes: ''
+      }
+
+      return {
+        success: true,
+        data: guest
+      }
+
+    } catch (error) {
+      console.error('GuestAdapter.updateGuest error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error desconocido actualizando invitado'
+      }
+    }
+  }
+
+  /**
+   * Eliminar invitado usando Supabase
+   */
+  static async deleteGuest(id: number): Promise<ApiResponse<void>> {
+    try {
+      console.log(`🗑️ GuestAdapter: Eliminando invitado ${id}`)
+      
+      const supabase = getSupabaseClient()
+      
+      const { error } = await supabase
+        .from('guests')
+        .delete()
+        .eq('id', String(id)) as any
+
+      if (error) {
+        console.error('Supabase error:', error)
+        throw new Error(error.message || 'Error eliminando invitado en Supabase')
+      }
+
+      return {
+        success: true,
+        data: undefined
+      }
+
+    } catch (error) {
+      console.error('GuestAdapter.deleteGuest error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error desconocido eliminando invitado'
       }
     }
   }

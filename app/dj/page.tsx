@@ -228,7 +228,7 @@ export default function DjPage() {
               Actualizar
             </Button>
             <Button
-              onClick={() => window.location.href = '/admin'}
+              onClick={() => window.location.href = '/dj-admin'}
               variant="outline"
               className="border-purple-400/20 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200"
             >
