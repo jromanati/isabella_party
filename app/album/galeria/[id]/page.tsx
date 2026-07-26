@@ -285,7 +285,7 @@ export default function AlbumGalleryPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4"
             style={{ background: 'rgba(0, 0, 0, 0.95)' }}
             onClick={() => setSelectedContent(null)}
           >
@@ -294,12 +294,23 @@ export default function AlbumGalleryPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative max-w-5xl w-full max-h-[90vh]"
+              className="relative w-full max-h-[95vh] md:max-w-5xl md:max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, { offset, velocity }) => {
+                const swipe = offset.x
+                if (swipe < -50) {
+                  goToNext()
+                } else if (swipe > 50) {
+                  goToPrevious()
+                }
+              }}
             >
               <button
                 onClick={() => setSelectedContent(null)}
-                className="absolute -top-12 right-0 w-10 h-10 rounded-full flex items-center justify-center"
+                className="absolute -top-10 md:-top-12 right-0 w-10 h-10 rounded-full flex items-center justify-center z-10"
                 style={{
                   background: 'rgba(168, 85, 247, 0.2)',
                   border: '1px solid rgba(168, 85, 247, 0.3)',
@@ -309,11 +320,20 @@ export default function AlbumGalleryPage() {
               </button>
 
               <div className="relative rounded-2xl overflow-hidden" style={{ background: 'rgba(10, 5, 20, 0.8)' }}>
-                <div className="relative aspect-[16/9] md:aspect-[4/3]">
+                <div 
+                  className="relative max-h-[90vh] md:max-h-[85vh]"
+                  style={{
+                    aspectRatio: selectedContent.width && selectedContent.height 
+                      ? `${selectedContent.width}/${selectedContent.height}` 
+                      : selectedContent.content_type === 'video' && selectedContent.height && selectedContent.width && selectedContent.height > selectedContent.width
+                        ? '9/16'
+                        : '16/9'
+                  }}
+                >
                   {selectedContent.content_type === 'video' ? (
                     selectedContent.cloudinary_secure_url.includes('drive.google.com') ? (
                       <iframe
-                        src={selectedContent.cloudinary_secure_url}
+                        src={selectedContent.cloudinary_secure_url.replace('/preview', '/preview?autoplay=1')}
                         className="w-full h-full"
                         style={{ border: 'none' }}
                         allow="autoplay; fullscreen"
@@ -323,6 +343,7 @@ export default function AlbumGalleryPage() {
                       <video
                         src={selectedContent.cloudinary_secure_url}
                         controls
+                        autoPlay
                         className="w-full h-full object-contain"
                       />
                     )
