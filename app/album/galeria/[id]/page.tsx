@@ -310,7 +310,7 @@ export default function AlbumGalleryPage() {
             >
               <button
                 onClick={() => setSelectedContent(null)}
-                className="absolute top-4 right-4 md:-top-12 md:right-0 w-10 h-10 rounded-full flex items-center justify-center z-10 hidden md:flex"
+                className="absolute top-4 right-4 md:-top-12 md:right-0 w-10 h-10 rounded-full flex items-center justify-center z-10"
                 style={{
                   background: 'rgba(168, 85, 247, 0.2)',
                   border: '1px solid rgba(168, 85, 247, 0.3)',
@@ -353,7 +353,7 @@ export default function AlbumGalleryPage() {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={goToPrevious}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center z-10 hidden md:flex"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center z-10"
                   style={{
                     background: 'rgba(168, 85, 247, 0.2)',
                     border: '1px solid rgba(168, 85, 247, 0.3)',
@@ -366,7 +366,7 @@ export default function AlbumGalleryPage() {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={goToNext}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center z-10 hidden md:flex"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center z-10"
                   style={{
                     background: 'rgba(168, 85, 247, 0.2)',
                     border: '1px solid rgba(168, 85, 247, 0.3)',
