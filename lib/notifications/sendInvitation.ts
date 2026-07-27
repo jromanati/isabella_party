@@ -130,7 +130,7 @@ function renderAlbumEmailHtml(payload: SendAlbumNotification) {
             <!-- Header Image -->
             <tr>
               <td style="padding:0;">
-                <img src="${baseUrl}/fiesta.jpeg" alt="Isabella XV" width="600" style="display:block;width:100%;height:auto;border-radius:18px 18px 0 0;" />
+                <img src="${baseUrl}/fiesta.jpg" alt="Isabella XV" width="600" style="display:block;width:100%;height:auto;border-radius:18px 18px 0 0;" />
               </td>
             </tr>
 
