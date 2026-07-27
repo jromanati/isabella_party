@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Camera, Sparkles, ChevronRight, Film } from 'lucide-react'
+import { Camera, Sparkles, ChevronRight, Film, Play, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 interface Album {
@@ -24,6 +24,8 @@ export default function AlbumPage() {
   const [mounted, setMounted] = useState(false)
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
+  const [showVideoModal, setShowVideoModal] = useState(false)
+  const [showEmotionalVideoModal, setShowEmotionalVideoModal] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -143,11 +145,115 @@ export default function AlbumPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card de Fotos de los Invitados (siempre primera) */}
+            {/* Card de Video de Resumen (siempre primera) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <motion.div
+                className="relative overflow-hidden rounded-3xl cursor-pointer h-full flex flex-col"
+                style={{
+                  background: 'rgba(168, 85, 247, 0.08)',
+                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                  backdropFilter: 'blur(20px)',
+                  boxShadow: '0 0 60px rgba(168, 85, 247, 0.15)',
+                  minHeight: '280px',
+                }}
+                whileHover={{
+                  boxShadow: '0 0 80px rgba(168, 85, 247, 0.25)',
+                  borderColor: 'rgba(168, 85, 247, 0.4)',
+                }}
+                onClick={() => setShowVideoModal(true)}
+              >
+                {/* Icono grande como "portada" */}
+                <div className="relative aspect-video w-full flex items-center justify-center" style={{ background: 'rgba(168, 85, 247, 0.1)' }}>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                  >
+                    <Film className="w-16 h-16" style={{ color: 'rgba(168, 85, 247, 0.4)' }} />
+                  </motion.div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  {/* Play button overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="w-16 h-16 rounded-full flex items-center justify-center"
+                      style={{
+                        background: 'rgba(168, 85, 247, 0.3)',
+                        border: '2px solid rgba(168, 85, 247, 0.5)',
+                        backdropFilter: 'blur(10px)',
+                      }}
+                    >
+                      <Play className="w-8 h-8" style={{ color: '#c084fc' }} />
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Contenido */}
+                <div className="relative z-10 p-6 flex flex-col flex-grow">
+                  <div className="flex items-center gap-2 mb-3">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Film className="w-5 h-5" style={{ color: '#f9a8d4' }} />
+                    </motion.div>
+                    <h2 className="text-lg font-bold text-white leading-tight">
+                      Resumen de la Fiesta
+                    </h2>
+                  </div>
+
+                  <p className="text-white/70 text-sm leading-relaxed flex-grow">
+                    Revive los mejores momentos de la celebración en este video especial.
+                  </p>
+
+                  <motion.div
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="mt-3 self-end"
+                  >
+                    <ChevronRight className="w-5 h-5" style={{ color: '#c084fc' }} />
+                  </motion.div>
+                </div>
+
+                {/* Animated gradient background */}
+                <motion.div
+                  className="absolute inset-0 opacity-30 pointer-events-none"
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                  }}
+                  transition={{
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  }}
+                  style={{
+                    background: 'linear-gradient(90deg, rgba(168,85,247,0.1) 0%, rgba(236,72,153,0.1) 50%, rgba(168,85,247,0.1) 100%)',
+                    backgroundSize: '200% 200%',
+                  }}
+                />
+
+                {/* Glow effect on hover */}
+                <motion.div
+                  className="absolute inset-0 rounded-3xl opacity-0 pointer-events-none"
+                  whileHover={{ opacity: 1 }}
+                  style={{
+                    background: 'radial-gradient(circle at center, rgba(168,85,247,0.15) 0%, transparent 70%)',
+                  }}
+                />
+              </motion.div>
+            </motion.div>
+
+            {/* Card de Fotos de los Invitados (segunda) */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -241,7 +347,7 @@ export default function AlbumPage() {
                   key={album.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 + (index * 0.1), duration: 0.5 }}
+                  transition={{ delay: 0.5 + (index * 0.1), duration: 0.5 }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -333,6 +439,110 @@ export default function AlbumPage() {
                 </motion.div>
               )
             })}
+
+            {/* Card de Video Emotivo (siempre última) */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 + (albums.length * 0.1), duration: 0.5 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <motion.div
+                className="relative overflow-hidden rounded-3xl cursor-pointer h-full flex flex-col"
+                style={{
+                  background: 'rgba(168, 85, 247, 0.08)',
+                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                  backdropFilter: 'blur(20px)',
+                  boxShadow: '0 0 60px rgba(168, 85, 247, 0.15)',
+                  minHeight: '280px',
+                }}
+                whileHover={{
+                  boxShadow: '0 0 80px rgba(168, 85, 247, 0.25)',
+                  borderColor: 'rgba(168, 85, 247, 0.4)',
+                }}
+                onClick={() => setShowEmotionalVideoModal(true)}
+              >
+                {/* Icono grande como "portada" */}
+                <div className="relative aspect-video w-full flex items-center justify-center" style={{ background: 'rgba(168, 85, 247, 0.1)' }}>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                  >
+                    <Film className="w-16 h-16" style={{ color: 'rgba(168, 85, 247, 0.4)' }} />
+                  </motion.div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  {/* Play button overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="w-16 h-16 rounded-full flex items-center justify-center"
+                      style={{
+                        background: 'rgba(168, 85, 247, 0.3)',
+                        border: '2px solid rgba(168, 85, 247, 0.5)',
+                        backdropFilter: 'blur(10px)',
+                      }}
+                    >
+                      <Play className="w-8 h-8" style={{ color: '#c084fc' }} />
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Contenido */}
+                <div className="relative z-10 p-6 flex flex-col flex-grow">
+                  <div className="flex items-center gap-2 mb-3">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Film className="w-5 h-5" style={{ color: '#f9a8d4' }} />
+                    </motion.div>
+                    <h2 className="text-lg font-bold text-white leading-tight">
+                      Para Isabella
+                    </h2>
+                  </div>
+
+                  <p className="text-white/70 text-sm leading-relaxed flex-grow">
+                    Un mensaje especial de amor para mi hija en su XV años.
+                  </p>
+
+                  <motion.div
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="mt-3 self-end"
+                  >
+                    <ChevronRight className="w-5 h-5" style={{ color: '#c084fc' }} />
+                  </motion.div>
+                </div>
+
+                {/* Animated gradient background */}
+                <motion.div
+                  className="absolute inset-0 opacity-30 pointer-events-none"
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                  }}
+                  transition={{
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  }}
+                  style={{
+                    background: 'linear-gradient(90deg, rgba(168,85,247,0.1) 0%, rgba(236,72,153,0.1) 50%, rgba(168,85,247,0.1) 100%)',
+                    backgroundSize: '200% 200%',
+                  }}
+                />
+
+                {/* Glow effect on hover */}
+                <motion.div
+                  className="absolute inset-0 rounded-3xl opacity-0 pointer-events-none"
+                  whileHover={{ opacity: 1 }}
+                  style={{
+                    background: 'radial-gradient(circle at center, rgba(168,85,247,0.15) 0%, transparent 70%)',
+                  }}
+                />
+              </motion.div>
+            </motion.div>
           </div>
         )}
 
@@ -345,6 +555,86 @@ export default function AlbumPage() {
           Toca la card para ver la galería completa
         </motion.p>
       </div>
+
+      {/* Video Modal */}
+      {showVideoModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0, 0, 0, 0.95)' }}
+          onClick={() => setShowVideoModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="relative w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowVideoModal(false)}
+              className="absolute -top-12 right-0 w-10 h-10 rounded-full flex items-center justify-center"
+              style={{
+                background: 'rgba(168, 85, 247, 0.2)',
+                border: '1px solid rgba(168, 85, 247, 0.3)',
+              }}
+            >
+              <X className="w-5 h-5" style={{ color: '#c084fc' }} />
+            </button>
+            <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: '576/1024' }}>
+              <video
+                src="/videos/fiesta_resumen.mp4"
+                controls
+                autoPlay
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Emotional Video Modal */}
+      {showEmotionalVideoModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0, 0, 0, 0.95)' }}
+          onClick={() => setShowEmotionalVideoModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="relative w-full max-w-4xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowEmotionalVideoModal(false)}
+              className="absolute -top-12 right-0 w-10 h-10 rounded-full flex items-center justify-center"
+              style={{
+                background: 'rgba(168, 85, 247, 0.2)',
+                border: '1px solid rgba(168, 85, 247, 0.3)',
+              }}
+            >
+              <X className="w-5 h-5" style={{ color: '#c084fc' }} />
+            </button>
+            <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: '1920/1080' }}>
+              <iframe
+                src="https://www.youtube.com/embed/-epoa6PTC-M?autoplay=1&mute=1&cc_load_policy=0&hl=es&rel=0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   )
 }

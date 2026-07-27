@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, Clock, Plus, Edit, Trash2, Search, UserPlus, ChevronLeft, ChevronRight, ArrowLeft, AlertTriangle, MoreVertical, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { GuestAdapter } from '@/services/guest-adapter.service'
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { sendInvitation, sendAlbumNotification } from '@/lib/notifications/sendInvitation'
 import type { Guest } from '@/types/guest'
 
 // ── Neon ambience ───────────────────────────────────────────────
@@ -45,122 +47,282 @@ function ActionMenu({
   onSendInvitation: () => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
+
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
+
   const isConfirmed = guest.rsvp_status === 'confirmed'
-  const hasEmail = !!guest.email
+  const hasEmail = Boolean(guest.email?.trim())
+
+  const MENU_WIDTH = 224
+  const MENU_ESTIMATED_HEIGHT = 220
+  const SCREEN_MARGIN = 12
+  const MENU_GAP = 8
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  const calculateMenuPosition = useCallback(() => {
+    const button = buttonRef.current
+    if (!button) return
+
+    const rect = button.getBoundingClientRect()
+
+    let left = rect.right - MENU_WIDTH
+    left = Math.max(SCREEN_MARGIN, left)
+    left = Math.min(left, window.innerWidth - MENU_WIDTH - SCREEN_MARGIN)
+
+    let top = rect.bottom + MENU_GAP
+    const availableSpaceBelow = window.innerHeight - rect.bottom
+    const availableSpaceAbove = rect.top
+
+    if (
+      availableSpaceBelow < MENU_ESTIMATED_HEIGHT &&
+      availableSpaceAbove > availableSpaceBelow
+    ) {
+      top = rect.top - MENU_ESTIMATED_HEIGHT - MENU_GAP
+    }
+
+    top = Math.max(SCREEN_MARGIN, top)
+
+    if (top + MENU_ESTIMATED_HEIGHT > window.innerHeight - SCREEN_MARGIN) {
+      top = window.innerHeight - MENU_ESTIMATED_HEIGHT - SCREEN_MARGIN
+    }
+
+    setMenuPosition({ top, left })
+  }, [])
+
+  const closeMenu = useCallback(() => {
+    setIsOpen(false)
+  }, [])
+
+  const toggleMenu = () => {
+    if (isOpen) {
+      closeMenu()
+      return
+    }
+
+    calculateMenuPosition()
+    setIsOpen(true)
+  }
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleResize = () => calculateMenuPosition()
+    const handleScroll = () => closeMenu()
+
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('scroll', handleScroll, true)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [isOpen, calculateMenuPosition, closeMenu])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeMenu()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, closeMenu])
+
+  const executeAction = (callback: () => void) => {
+    callback()
+    closeMenu()
+  }
+
+  const menu =
+    isMounted && isOpen
+      ? createPortal(
+          <AnimatePresence>
+            <>
+              <motion.button
+                type="button"
+                aria-label="Cerrar menú"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={closeMenu}
+                className="fixed inset-0 z-[9998] cursor-default"
+                style={{ background: 'transparent' }}
+              />
+
+              <motion.div
+                role="menu"
+                initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="fixed z-[9999] w-56 overflow-hidden rounded-xl"
+                style={{
+                  top: menuPosition.top,
+                  left: menuPosition.left,
+                  background: 'rgba(10,5,20,0.98)',
+                  border: '1px solid rgba(168,85,247,0.35)',
+                  backdropFilter: 'blur(24px)',
+                  WebkitBackdropFilter: 'blur(24px)',
+                  boxShadow: '0 18px 60px rgba(0,0,0,0.75)',
+                }}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="py-1">
+                  <motion.button
+                    type="button"
+                    role="menuitem"
+                    whileHover={{ background: 'rgba(168,85,247,0.12)' }}
+                    onClick={() => executeAction(onToggleRSVP)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left"
+                    style={{
+                      color: 'rgba(255,255,255,0.85)',
+                      fontFamily: 'var(--font-body)',
+                    }}
+                  >
+                    {isConfirmed ? (
+                      <>
+                        <X className="h-4 w-4" style={{ color: '#fbbf24' }} />
+                        <span className="text-sm">Marcar pendiente</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4" style={{ color: '#4ade80' }} />
+                        <span className="text-sm">Confirmar</span>
+                      </>
+                    )}
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    role="menuitem"
+                    whileHover={{ background: 'rgba(168,85,247,0.12)' }}
+                    onClick={() => executeAction(onEdit)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left"
+                    style={{
+                      color: 'rgba(255,255,255,0.85)',
+                      fontFamily: 'var(--font-body)',
+                    }}
+                  >
+                    <Edit className="h-4 w-4" style={{ color: '#60a5fa' }} />
+                    <span className="text-sm">Editar</span>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    role="menuitem"
+                    disabled={!hasEmail}
+                    whileHover={{
+                      background: hasEmail
+                        ? 'rgba(168,85,247,0.12)'
+                        : 'transparent',
+                    }}
+                    onClick={() => {
+                      if (hasEmail) executeAction(onSendInvitation)
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left"
+                    style={{
+                      color: hasEmail
+                        ? 'rgba(255,255,255,0.85)'
+                        : 'rgba(255,255,255,0.3)',
+                      fontFamily: 'var(--font-body)',
+                      cursor: hasEmail ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    <Mail
+                      className="h-4 w-4"
+                      style={{
+                        color: hasEmail
+                          ? '#ec4899'
+                          : 'rgba(255,255,255,0.3)',
+                      }}
+                    />
+                    <span className="text-sm">
+                      {hasEmail ? 'Enviar invitación' : 'Sin email'}
+                    </span>
+                  </motion.button>
+
+                  <div
+                    className="mx-3 my-1 h-px"
+                    style={{ background: 'rgba(255,255,255,0.08)' }}
+                  />
+
+                  <motion.button
+                    type="button"
+                    role="menuitem"
+                    disabled={isConfirmed}
+                    whileHover={{
+                      background: isConfirmed
+                        ? 'transparent'
+                        : 'rgba(239,68,68,0.12)',
+                    }}
+                    onClick={() => {
+                      if (!isConfirmed) executeAction(onDelete)
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left"
+                    style={{
+                      color: isConfirmed
+                        ? 'rgba(255,255,255,0.3)'
+                        : '#fca5a5',
+                      fontFamily: 'var(--font-body)',
+                      cursor: isConfirmed ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    <Trash2
+                      className="h-4 w-4"
+                      style={{
+                        color: isConfirmed
+                          ? 'rgba(255,255,255,0.3)'
+                          : '#f87171',
+                      }}
+                    />
+                    <span className="text-sm">
+                      {isConfirmed ? 'No se puede eliminar' : 'Eliminar'}
+                    </span>
+                  </motion.button>
+                </div>
+              </motion.div>
+            </>
+          </AnimatePresence>,
+          document.body
+        )
+      : null
 
   return (
-    <div className="relative">
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg"
-        style={{
-          background: 'rgba(168,85,247,0.12)',
-          border: '1px solid rgba(168,85,247,0.3)',
-          color: 'rgba(192,132,252,0.8)',
-        }}
-      >
-        <MoreVertical className="w-4 h-4" />
-      </motion.button>
+    <>
+      <div className="relative inline-flex">
+        <motion.button
+          ref={buttonRef}
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          aria-label={`Acciones para ${guest.full_name}`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={toggleMenu}
+          className="rounded-lg p-2"
+          style={{
+            background: isOpen
+              ? 'rgba(168,85,247,0.24)'
+              : 'rgba(168,85,247,0.12)',
+            border: '1px solid rgba(168,85,247,0.3)',
+            color: isOpen ? '#d8b4fe' : 'rgba(192,132,252,0.8)',
+          }}
+        >
+          <MoreVertical className="h-4 w-4" />
+        </motion.button>
+      </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              className="absolute right-0 top-full mt-2 z-50 w-48 rounded-xl overflow-hidden"
-              style={{
-                background: 'rgba(10,5,20,0.95)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(24px)',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-              }}
-            >
-              <div className="py-1">
-                <motion.button
-                  whileHover={{ background: 'rgba(168,85,247,0.1)' }}
-                  onClick={() => {
-                    onToggleRSVP()
-                    setIsOpen(false)
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left"
-                  style={{ color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-body)' }}
-                >
-                  {isConfirmed ? (
-                    <>
-                      <X className="w-4 h-4" style={{ color: '#fbbf24' }} />
-                      <span className="text-sm">Marcar pendiente</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" style={{ color: '#4ade80' }} />
-                      <span className="text-sm">Confirmar</span>
-                    </>
-                  )}
-                </motion.button>
-                <motion.button
-                  whileHover={{ background: 'rgba(168,85,247,0.1)' }}
-                  onClick={() => {
-                    onEdit()
-                    setIsOpen(false)
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left"
-                  style={{ color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-body)' }}
-                >
-                  <Edit className="w-4 h-4" style={{ color: '#60a5fa' }} />
-                  <span className="text-sm">Editar</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ background: hasEmail ? 'rgba(168,85,247,0.1)' : 'transparent' }}
-                  onClick={() => {
-                    if (hasEmail) {
-                      onSendInvitation()
-                      setIsOpen(false)
-                    }
-                  }}
-                  disabled={!hasEmail}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left"
-                  style={{
-                    color: hasEmail ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)',
-                    fontFamily: 'var(--font-body)',
-                    cursor: hasEmail ? 'pointer' : 'not-allowed',
-                  }}
-                >
-                  <Mail className="w-4 h-4" style={{ color: hasEmail ? '#ec4899' : 'rgba(255,255,255,0.3)' }} />
-                  <span className="text-sm">{hasEmail ? 'Enviar invitación' : 'Sin email'}</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ background: isConfirmed ? 'transparent' : 'rgba(239,68,68,0.1)' }}
-                  onClick={() => {
-                    if (!isConfirmed) {
-                      onDelete()
-                      setIsOpen(false)
-                    }
-                  }}
-                  disabled={isConfirmed}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left"
-                  style={{
-                    color: isConfirmed ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.8)',
-                    fontFamily: 'var(--font-body)',
-                    cursor: isConfirmed ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" style={{ color: isConfirmed ? 'rgba(255,255,255,0.3)' : '#f87171' }} />
-                  <span className="text-sm">{isConfirmed ? 'No se puede eliminar' : 'Eliminar'}</span>
-                </motion.button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+      {menu}
+    </>
   )
 }
 
@@ -453,11 +615,9 @@ function GuestFormModal({
               <label className="block text-xs font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)' }}>
                 Número de mesa (opcional)
               </label>
-              <input
-                type="number"
+              <select
                 value={table}
                 onChange={(e) => setTable(e.target.value)}
-                placeholder="Ej: 12"
                 className="w-full px-4 py-3 rounded-xl outline-none"
                 style={{
                   background: 'rgba(255,255,255,0.05)',
@@ -465,7 +625,12 @@ function GuestFormModal({
                   color: 'rgba(255,255,255,0.9)',
                   fontFamily: 'var(--font-body)',
                 }}
-              />
+              >
+                <option value="">Sin asignar</option>
+                {[1, 2, 3, 4, 5, 6].map(num => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)' }}>
@@ -689,6 +854,138 @@ export default function AdminInvitadosPage() {
       const message = e instanceof Error ? e.message : String(e)
       setError(message)
       setToast({ message: 'Error al enviar invitación', type: 'error' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleMassSendInvitations = async () => {
+    try {
+      setSaving(true)
+      
+      // Filtrar invitados pendientes con email
+      const pendingGuests = guests.filter(
+        guest => guest.rsvp_status === 'pending' && guest.email && guest.email.trim() !== ''
+      )
+      
+      if (pendingGuests.length === 0) {
+        setToast({ 
+          message: 'No hay invitados pendientes con email para enviar', 
+          type: 'error' 
+        })
+        return
+      }
+      
+      let successCount = 0
+      let errorCount = 0
+      
+      for (const guest of pendingGuests) {
+        try {
+          const response = await fetch('/api/send-invitation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              guestName: guest.full_name,
+              guestEmail: guest.email || '',
+              tableNumber: guest.table_number || null,
+              guestId: guest.id,
+            }),
+          })
+          
+          const result = await response.json()
+          
+          if (result.success) {
+            successCount++
+          } else {
+            errorCount++
+          }
+        } catch (e) {
+          errorCount++
+        }
+      }
+      
+      if (successCount > 0) {
+        setToast({ 
+          message: `Invitaciones enviadas: ${successCount} exitosas${errorCount > 0 ? `, ${errorCount} con error` : ''}`, 
+          type: 'success' 
+        })
+      } else {
+        setToast({ 
+          message: 'Error al enviar invitaciones masivas', 
+          type: 'error' 
+        })
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      setError(message)
+      setToast({ message: 'Error al enviar invitaciones masivas', type: 'error' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleMassSendAlbumNotifications = async () => {
+    try {
+      setSaving(true)
+      
+      // Filtrar invitados con email
+      const guestsWithEmail = guests.filter(
+        guest => guest.email && guest.email.trim() !== ''
+      )
+      
+      if (guestsWithEmail.length === 0) {
+        setToast({ 
+          message: 'No hay invitados con email para enviar notificaciones', 
+          type: 'error' 
+        })
+        return
+      }
+      
+      let successCount = 0
+      let errorCount = 0
+      
+      for (const guest of guestsWithEmail) {
+        try {
+          const response = await fetch('/api/send-album-notification', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              guestName: guest.full_name,
+              guestEmail: guest.email || '',
+            }),
+          })
+          
+          const result = await response.json()
+          
+          if (result.success) {
+            successCount++
+          } else {
+            errorCount++
+          }
+        } catch (e) {
+          errorCount++
+        }
+      }
+      
+      if (successCount > 0) {
+        setToast({ 
+          message: `Notificaciones de álbumes enviadas: ${successCount} exitosas${errorCount > 0 ? `, ${errorCount} con error` : ''}`, 
+          type: 'success' 
+        })
+      } else {
+        setToast({ 
+          message: 'Error al enviar notificaciones de álbumes', 
+          type: 'error' 
+        })
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      setError(message)
+      setToast({ message: 'Error al enviar notificaciones de álbumes', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -958,6 +1255,44 @@ export default function AdminInvitadosPage() {
           Agregar invitado
         </motion.button>
 
+        {/* ── Mass Send Invitations Button ── */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleMassSendInvitations}
+          disabled={saving}
+          className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
+          style={{
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            border: '1px solid rgba(16,185,129,0.3)',
+            color: 'white',
+            fontFamily: 'var(--font-body)',
+            opacity: saving ? 0.6 : 1,
+          }}
+        >
+          <Mail className="w-4 h-4" />
+          {saving ? 'Enviando...' : 'Enviar invitaciones masivas'}
+        </motion.button>
+
+        {/* ── Mass Send Album Notifications Button ── */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleMassSendAlbumNotifications}
+          disabled={saving}
+          className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
+          style={{
+            background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+            border: '1px solid rgba(139,92,246,0.3)',
+            color: 'white',
+            fontFamily: 'var(--font-body)',
+            opacity: saving ? 0.6 : 1,
+          }}
+        >
+          <Mail className="w-4 h-4" />
+          {saving ? 'Enviando...' : 'Enviar notificaciones de álbumes'}
+        </motion.button>
+
         {/* ── Error ── */}
         {error && (
           <div
@@ -1028,7 +1363,7 @@ export default function AdminInvitadosPage() {
             ) : (
               <>
                 {/* Table Header */}
-                <div className="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-semibold" style={{ 
+                <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-3 text-xs font-semibold" style={{ 
                   background: 'rgba(255,255,255,0.02)',
                   borderBottom: '1px solid rgba(255,255,255,0.06)',
                   color: 'rgba(255,255,255,0.5)',
@@ -1050,28 +1385,32 @@ export default function AdminInvitadosPage() {
                     return (
                       <div
                         key={guest.id}
-                        className="grid grid-cols-12 gap-2 px-4 py-3 items-center"
+                        className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-2 px-4 py-3 sm:items-center"
                         style={{
                           background: idx % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent',
                           borderBottom: '1px solid rgba(255,255,255,0.04)',
                         }}
                       >
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
+                          <span className="sm:hidden text-xs font-semibold text-white/40 mb-1 block" style={{ fontFamily: 'var(--font-body)' }}>Nombre</span>
                           <p className="text-sm font-semibold text-white/85 truncate" style={{ fontFamily: 'var(--font-body)' }}>
                             {guest.full_name}
                           </p>
                         </div>
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
+                          <span className="sm:hidden text-xs font-semibold text-white/40 mb-1 block" style={{ fontFamily: 'var(--font-body)' }}>Email</span>
                           <p className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-body)' }}>
                             {guest.email || '—'}
                           </p>
                         </div>
-                        <div className="col-span-1">
+                        <div className="sm:col-span-1">
+                          <span className="sm:hidden text-xs font-semibold text-white/40 mb-1 block" style={{ fontFamily: 'var(--font-body)' }}>Mesa</span>
                           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-body)' }}>
                             {guest.table_number ? String(guest.table_number).padStart(2, '0') : '—'}
                           </p>
                         </div>
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
+                          <span className="sm:hidden text-xs font-semibold text-white/40 mb-1 block" style={{ fontFamily: 'var(--font-body)' }}>Estado</span>
                           <span
                             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold"
                             style={{
@@ -1085,7 +1424,8 @@ export default function AdminInvitadosPage() {
                             {isConfirmed ? 'Confirmado' : isDeclined ? 'Rechazado' : 'Pendiente'}
                           </span>
                         </div>
-                        <div className="col-span-3">
+                        <div className="sm:col-span-3">
+                          <span className="sm:hidden text-xs font-semibold text-white/40 mb-1 block" style={{ fontFamily: 'var(--font-body)' }}>Mensaje</span>
                           {guest.rsvp_message ? (
                             <p 
                               className="text-sm cursor-pointer" 
@@ -1107,7 +1447,8 @@ export default function AdminInvitadosPage() {
                             </p>
                           )}
                         </div>
-                        <div className="col-span-2 flex items-center justify-end">
+                        <div className="sm:col-span-2 flex items-center justify-end sm:justify-end">
+                          <span className="sm:hidden text-xs font-semibold text-white/40 mb-1 block w-full" style={{ fontFamily: 'var(--font-body)' }}>Acciones</span>
                           <ActionMenu
                             guest={guest}
                             onEdit={() => {
