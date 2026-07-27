@@ -120,7 +120,7 @@ function renderAlbumEmailHtml(payload: SendAlbumNotification) {
     <title>Álbumes disponibles - Isabella XV</title>
   </head>
   <body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background-color:#050308;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" background="${baseUrl}/fiesta.jpg" style="background-size:cover;background-position:center;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" background="${baseUrl}/isabella-hero-bg.jpg" style="background-size:cover;background-position:center;">
       <tr>
         <td align="center" style="padding:40px 20px;background-color:rgba(5,2,17,0.85);">
           
@@ -130,7 +130,7 @@ function renderAlbumEmailHtml(payload: SendAlbumNotification) {
             <!-- Header Image -->
             <tr>
               <td style="padding:0;">
-                <img src="${baseUrl}/2.jpeg" alt="Isabella XV" width="600" style="display:block;width:100%;height:auto;border-radius:18px 18px 0 0;" />
+                <img src="${baseUrl}/fiesta.jpeg" alt="Isabella XV" width="600" style="display:block;width:100%;height:auto;border-radius:18px 18px 0 0;" />
               </td>
             </tr>
 
