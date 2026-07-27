@@ -46,7 +46,8 @@ export default function AlbumPage() {
       const response = await fetch('/api/albums')
       if (response.ok) {
         const data = await response.json()
-        setAlbums(data.albums || [])
+        const sortedAlbums = (data.albums || []).sort((a: Album, b: Album) => a.sort_order - b.sort_order)
+        setAlbums(sortedAlbums)
       }
     } catch (error) {
       console.error('Error loading albums:', error)

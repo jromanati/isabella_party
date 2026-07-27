@@ -285,7 +285,7 @@ export default function AlbumGalleryPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center md:p-4"
+            className="fixed inset-0 z-50"
             style={{ background: 'rgba(0, 0, 0, 0.95)' }}
             onClick={() => setSelectedContent(null)}
           >
@@ -294,7 +294,7 @@ export default function AlbumGalleryPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-full h-full md:max-w-5xl md:max-h-[90vh] md:h-auto"
+              className="relative w-full h-full"
               onClick={(e) => e.stopPropagation()}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
@@ -310,7 +310,7 @@ export default function AlbumGalleryPage() {
             >
               <button
                 onClick={() => setSelectedContent(null)}
-                className="absolute top-4 right-4 md:-top-12 md:right-0 w-10 h-10 rounded-full flex items-center justify-center z-10"
+                className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center z-10"
                 style={{
                   background: 'rgba(168, 85, 247, 0.2)',
                   border: '1px solid rgba(168, 85, 247, 0.3)',
@@ -319,7 +319,7 @@ export default function AlbumGalleryPage() {
                 <X className="w-5 h-5" style={{ color: '#c084fc' }} />
               </button>
 
-              <div className="relative w-full h-full md:rounded-2xl md:overflow-hidden" style={{ background: 'rgba(10, 5, 20, 0.8)' }}>
+              <div className="relative w-full h-full" style={{ background: 'rgba(10, 5, 20, 0.8)' }}>
                 <div className="relative w-full h-full">
                   {selectedContent.content_type === 'video' ? (
                     selectedContent.cloudinary_secure_url.includes('drive.google.com') ? (

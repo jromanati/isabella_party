@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Film, Image as ImageIcon, X, ArrowLeft, Edit, Trash2 } from 'lucide-react'
+import { Plus, Film, Image as ImageIcon, X, ArrowLeft, Edit, Trash2, GripVertical } from 'lucide-react'
 import Link from 'next/link'
 
 interface Album {
@@ -23,6 +23,9 @@ export default function AlbumesPage() {
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [draggedItem, setDraggedItem] = useState<number | null>(null)
+  const [reordering, setReordering] = useState(false)
+  const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -38,11 +41,64 @@ export default function AlbumesPage() {
       const response = await fetch('/api/albums')
       if (!response.ok) throw new Error('Error al cargar álbumes')
       const data = await response.json()
-      setAlbums(data.albums || [])
+      const sortedAlbums = (data.albums || []).sort((a: Album, b: Album) => a.sort_order - b.sort_order)
+      setAlbums(sortedAlbums)
     } catch (error) {
       console.error('Error loading albums:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDragStart = (e: any, index: number) => {
+    setDraggedItem(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: any) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = async (e: any, dropIndex: number) => {
+    e.preventDefault()
+    
+    if (draggedItem === null || draggedItem === dropIndex) {
+      setDraggedItem(null)
+      return
+    }
+
+    setReordering(true)
+    
+    // Reordenar el array localmente
+    const newAlbums = [...albums]
+    const [movedItem] = newAlbums.splice(draggedItem, 1)
+    newAlbums.splice(dropIndex, 0, movedItem)
+    
+    // Actualizar sort_order para todos los elementos
+    const updates = newAlbums.map((item, index) => ({
+      id: item.id,
+      sort_order: index,
+    }))
+
+    try {
+      // Enviar actualizaciones al servidor
+      await fetch('/api/albums/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ albums: updates }),
+      })
+      
+      setAlbums(newAlbums)
+      setShowSuccessToast(true)
+      setTimeout(() => setShowSuccessToast(false), 3000)
+    } catch (error) {
+      console.error('Error reordering albums:', error)
+      // Revertir si hay error
+      setAlbums(albums)
+    } finally {
+      setReordering(false)
+      setDraggedItem(null)
     }
   }
 
@@ -177,20 +233,54 @@ export default function AlbumesPage() {
             </motion.button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {albums.map((album, index) => (
-              <motion.div
-                key={album.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative rounded-2xl overflow-hidden"
-                style={{
-                  background: 'rgba(10,5,20,0.8)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  backdropFilter: 'blur(24px)',
-                }}
-              >
+          <div className="relative">
+            {reordering && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 rounded-2xl">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  className="w-12 h-12 rounded-full"
+                  style={{
+                    border: '3px solid rgba(168, 85, 247, 0.2)',
+                    borderTopColor: '#c084fc',
+                  }}
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {albums.map((album, index) => (
+                <motion.div
+                  key={album.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className="relative rounded-2xl overflow-hidden cursor-move group"
+                  style={{
+                    background: 'rgba(10,5,20,0.8)',
+                    border: draggedItem === index 
+                      ? '2px solid rgba(168, 85, 247, 0.6)' 
+                      : '1px solid rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(24px)',
+                    opacity: draggedItem === index ? 0.5 : 1,
+                  }}
+                >
+                  {/* Drag handle icon */}
+                  <div className="absolute top-3 left-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{
+                        background: 'rgba(0,0,0,0.6)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                      }}
+                    >
+                      <GripVertical className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
                 {/* Cover Image */}
                 <div className="relative aspect-video">
                   {album.cover_thumbnail ? (
@@ -290,6 +380,7 @@ export default function AlbumesPage() {
                 </div>
               </motion.div>
             ))}
+          </div>
           </div>
         )}
       </div>
@@ -428,6 +519,32 @@ export default function AlbumesPage() {
                 </motion.button>
               </form>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Success Toast */}
+      <AnimatePresence>
+        {showSuccessToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div
+              className="px-6 py-3 rounded-full flex items-center gap-2"
+              style={{
+                background: 'rgba(34, 197, 94, 0.15)',
+                border: '1px solid rgba(34, 197, 94, 0.3)',
+                backdropFilter: 'blur(20px)',
+              }}
+            >
+              <div className="w-2 h-2 rounded-full" style={{ background: '#4ade80' }} />
+              <span className="text-sm font-medium" style={{ color: '#4ade80' }}>
+                Orden actualizado correctamente
+              </span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
